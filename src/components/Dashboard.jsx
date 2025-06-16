@@ -1,10 +1,7 @@
 import Sidebar from './Sidebar';
 import MetricCard from './MetricCard';
 import APIManager from './APIManager';
-import React, { useState, useEffect } from 'react';
-import { apiService } from '../services/apiService';
-import { apiStorage } from '../services/apiStorage';
-import GlassCard from './GlassCard';
+import React, { useState } from 'react';
 
 const metrics = [
   { label: 'TOTAL PROFIT', value: '$24,500', color: 'green' },
@@ -22,24 +19,6 @@ const metrics = [
 
 export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState('dashboard');
-  const [error, setError] = useState('');
-  const [showResetInfo, setShowResetInfo] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    if (!apiStorage.verifyPassword(password)) {
-      setError('Invalid password');
-      return;
-    }
-  };
-
-  useEffect(() => {
-    if (apiStorage.passwordHash) {
-      setIsAuthenticated(false); // Show unlock, not set password
-    }
-  }, []);
-
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar setCurrentPage={setCurrentPage} />
@@ -55,26 +34,6 @@ export default function Dashboard() {
                 <MetricCard key={m.label} {...m} />
               ))}
             </div>
-            <div className="text-right mt-2">
-              <button
-                type="button"
-                className="text-blue-400 underline text-sm"
-                onClick={() => setShowResetInfo(true)}
-              >
-                Forgot Password?
-              </button>
-            </div>
-            {showResetInfo && (
-              <div className="mt-2 text-sm text-gray-300">
-                To reset your password, contact the master account: <b>seme@kryptostack.com</b>
-                <button
-                  className="ml-2 px-2 py-1 bg-blue-500 text-white rounded"
-                  onClick={() => window.open('mailto:seme@kryptostack.com')}
-                >
-                  Email Now
-                </button>
-              </div>
-            )}
           </>
         )}
       </main>
