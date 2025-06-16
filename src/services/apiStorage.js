@@ -135,16 +135,10 @@ class APIStorage {
 
   // Clear all data
   clear() {
-    try {
-      localStorage.removeItem('zmart_api_keys');
-      localStorage.removeItem('zmart_password_hash');
-      this.isAuthenticated = false;
-      this.passwordHash = null;
-      this.encryptionKey = null;
-      console.log('Storage cleared successfully');
-    } catch (error) {
-      console.error('Failed to clear storage:', error);
-    }
+    // DO NOT remove from localStorage!
+    this.isAuthenticated = false;
+    this.encryptionKey = null;
+    // Do NOT set this.passwordHash = null;
   }
 }
 
