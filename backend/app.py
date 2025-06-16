@@ -2,16 +2,20 @@ import os
 from flask import Flask, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
+from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from cryptography.fernet import Fernet
 import pyotp
 import base64
 from functools import wraps
 from dotenv import load_dotenv
+import requests
+import time
 
 load_dotenv()
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True, origins=['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'])
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///zmarttrading.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -256,7 +260,56 @@ def confirm_admin_reset():
     session.pop('admin_reset_code', None)
     return jsonify({'message': 'Admin password reset'})
 
+@app.route('/api/kucoin/price/<symbol>', methods=['GET'])
+@login_required
+def get_kucoin_price(symbol):
+    try:
+        # Get user's API keys
+        user = User.query.get(session['user_id'])
+        api_key = APIKey.query.filter_by(user_id=user.id, name='KuCoin').first()
+        if not api_key:
+            return jsonify({'error': 'KuCoin API key not found'}), 404
+
+        # Decrypt API credentials
+        key = decrypt(api_key.key_enc)
+        secret = decrypt(api_key.secret_enc)
+        passphrase = decrypt(api_key.passphrase_enc)
+
+        # Make request to KuCoin API
+        url = f'https://api-futures.kucoin.com/api/v1/contracts/{symbol}'
+        headers = {
+            'KC-API-KEY': key,
+            'KC-API-SECRET': secret,
+            'KC-API-PASSPHRASE': passphrase,
+            'KC-API-TIMESTAMP': str(int(time.time() * 1000))
+        }
+        
+        response = requests.get(url, headers=headers)
+        print('--- KuCoin API Response ---')
+        print('Status:', response.status_code)
+        print('Headers:', response.headers)
+        print('Body:', response.text)
+        print('--------------------------')
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch price from KuCoin', 'kucoin_status': response.status_code, 'kucoin_body': response.text}), response.status_code
+        
+        data = response.json()
+        # Defensive: print the data structure
+        print('Parsed JSON:', data)
+        if 'data' not in data or 'lastTradePrice' not in data['data']:
+            return jsonify({'error': 'Unexpected KuCoin response', 'data': data}), 500
+        return jsonify({
+            'symbol': symbol,
+            'price': data['data']['lastTradePrice'],
+            'timestamp': data['data'].get('timestamp', None),
+            'raw': data['data']
+        })
+    except Exception as e:
+        import traceback
+        print('Exception in get_kucoin_price:', traceback.format_exc())
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True) 
+    app.run(debug=True, port=5000) 

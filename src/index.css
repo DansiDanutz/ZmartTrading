@@ -1,9 +1,9 @@
+@import '@fontsource/inter';
+@import '@fontsource/poppins';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import '@fontsource/inter';
-@import '@fontsource/poppins';
 
 body {
   background: #0a0d0f;

@@ -1,6 +1,7 @@
 Flask
 Flask-SQLAlchemy
 Flask-Mail
+Flask-CORS
 pyotp
 cryptography
 python-dotenv

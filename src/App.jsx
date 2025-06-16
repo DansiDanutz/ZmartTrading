@@ -1,5 +1,7 @@
-import { BrowserRouter as Router } from 'react-router-dom';
+import React, { useState } from 'react';
+import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import Documentation from './components/Documentation';
 import { ErrorBoundary } from 'react-error-boundary';
 
 function ErrorFallback({ error }) {
@@ -12,11 +14,27 @@ function ErrorFallback({ error }) {
 }
 
 export default function App() {
+  const [currentPage, setCurrentPage] = useState('dashboard');
+
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard />;
+      case 'documentation':
+        return <Documentation />;
+      default:
+        return <div className="p-8 text-xl">This page is under development.</div>;
+    }
+  };
+
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Router>
-        <Dashboard />
-      </Router>
+      <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <Sidebar setCurrentPage={setCurrentPage} />
+        <main style={{ flex: 1 }}>
+          {renderCurrentPage()}
+        </main>
+      </div>
     </ErrorBoundary>
   );
 } 

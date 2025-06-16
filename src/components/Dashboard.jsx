@@ -1,7 +1,7 @@
-import Sidebar from './Sidebar';
 import MetricCard from './MetricCard';
 import APIManager from './APIManager';
-import React, { useState } from 'react';
+import KucoinPrice from './KucoinPrice';
+import React from 'react';
 
 const metrics = [
   { label: 'TOTAL PROFIT', value: '$24,500', color: 'green' },
@@ -18,25 +18,16 @@ const metrics = [
 ];
 
 export default function Dashboard() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar setCurrentPage={setCurrentPage} />
-      <main className="dashboard-main">
-        {currentPage === 'api' ? (
-          <APIManager />
-        ) : (
-          <>
-            <div className="dashboard-title">Dashboard</div>
-            <div className="dashboard-subtitle">Trading performance overview</div>
-            <div className="metrics-grid">
-              {metrics.map((m) => (
-                <MetricCard key={m.label} {...m} />
-              ))}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+    <main className="dashboard-main">
+      <div className="dashboard-title">Dashboard</div>
+      <div className="dashboard-subtitle">Trading performance overview</div>
+      <div className="metrics-grid">
+        {metrics.map((m) => (
+          <MetricCard key={m.label} {...m} />
+        ))}
+      </div>
+      <KucoinPrice />
+    </main>
   );
 } 

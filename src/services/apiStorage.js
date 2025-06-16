@@ -140,6 +140,11 @@ class APIStorage {
     this.encryptionKey = null;
     // Do NOT set this.passwordHash = null;
   }
+
+  getAllAPIKeys() {
+    if (!this.isAuthenticated) throw new Error('Not authenticated');
+    return this.getAPIKeys();
+  }
 }
 
 // Create a single instance
