@@ -17,7 +17,7 @@ const menu = [
   { label: 'Investors', icon: '👤' },
   { label: 'History', icon: '🕒' },
   { label: 'Blog', icon: '📄' },
-  { label: 'Documentation', icon: '💻' },
+  { label: 'Roadmap', icon: '🚂' },
   { label: 'Examples', icon: '📚' },
   { label: 'API', icon: '🛠️' },
   { label: 'Website', icon: '🌐' },

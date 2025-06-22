@@ -104,6 +104,7 @@ class APIKey(db.Model):
     key_enc = db.Column(db.String(512), nullable=False)
     secret_enc = db.Column(db.String(512), nullable=True)
     passphrase_enc = db.Column(db.String(512), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
 class ActivityLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -723,49 +724,220 @@ def verify_2fa():
 
 @app.route('/api/apikeys', methods=['GET'])
 @login_required
+@admin_required
 def get_apikeys():
-    user = User.query.get(session['user_id'])
-    keys = APIKey.query.filter_by(user_id=user.id).all()
-    return jsonify([
-        {
-            'id': k.id,
-            'name': k.name,
-            'key': decrypt(k.key_enc),
-            'secret': decrypt(k.secret_enc),
-            'passphrase': decrypt(k.passphrase_enc)
-        } for k in keys
-    ])
+    """Get all API keys - All admins can view"""
+    try:
+        user = User.query.get(session['user_id'])
+        
+        # Get all API keys from SuperAdmin user
+        superadmin = User.query.filter_by(email=SUPERADMIN_EMAIL).first()
+        if not superadmin:
+            return jsonify({'error': 'SuperAdmin not found'}), 404
+            
+        api_keys = APIKey.query.filter_by(user_id=superadmin.id).all()
+        
+        keys_data = []
+        for key in api_keys:
+            keys_data.append({
+                'id': key.id,
+                'name': key.name,
+                'key': decrypt(key.key_enc)[:8] + '...' if key.key_enc else None,
+                'has_secret': bool(key.secret_enc),
+                'has_passphrase': bool(key.passphrase_enc),
+                'created_at': key.created_at.isoformat() if key.created_at else None,
+                'can_edit': user.is_superadmin  # Only SuperAdmin can edit
+            })
+        
+        log_activity('API_KEYS_VIEWED', f'Viewed {len(keys_data)} API keys')
+        return jsonify({'api_keys': keys_data})
+    except Exception as e:
+        app.logger.error(f"Error getting API keys: {e}")
+        return jsonify({'error': 'Failed to get API keys'}), 500
 
 @app.route('/api/apikeys', methods=['POST'])
 @login_required
+@superadmin_required
 def add_apikey():
-    data = request.json
-    name = data.get('name')
-    key = data.get('key')
-    secret = data.get('secret')
-    passphrase = data.get('passphrase')
-    user = User.query.get(session['user_id'])
-    apikey = APIKey(
-        user_id=user.id,
-        name=name,
-        key_enc=encrypt(key),
-        secret_enc=encrypt(secret),
-        passphrase_enc=encrypt(passphrase)
-    )
-    db.session.add(apikey)
-    db.session.commit()
-    return jsonify({'message': 'API key added'})
+    """Add new API key - SuperAdmin only"""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        key = data.get('key')
+        secret = data.get('secret')
+        passphrase = data.get('passphrase')
+        
+        if not name or not key:
+            return jsonify({'error': 'Name and API key are required'}), 400
+        
+        # Always use SuperAdmin user for API keys
+        superadmin = User.query.filter_by(email=SUPERADMIN_EMAIL).first()
+        if not superadmin:
+            return jsonify({'error': 'SuperAdmin not found'}), 404
+        
+        # Check if API key with this name already exists
+        existing_key = APIKey.query.filter_by(user_id=superadmin.id, name=name).first()
+        if existing_key:
+            return jsonify({'error': f'API key with name "{name}" already exists'}), 400
+        
+        # Create new API key with encryption
+        new_key = APIKey(
+            user_id=superadmin.id,
+            name=name,
+            key_enc=encrypt(key),
+            secret_enc=encrypt(secret) if secret else None,
+            passphrase_enc=encrypt(passphrase) if passphrase else None
+        )
+        
+        db.session.add(new_key)
+        db.session.commit()
+        
+        log_activity('API_KEY_ADDED', f'Added API key: {name}')
+        return jsonify({'message': 'API key added successfully', 'id': new_key.id}), 201
+        
+    except Exception as e:
+        app.logger.error(f"Error adding API key: {e}")
+        return jsonify({'error': 'Failed to add API key'}), 500
 
 @app.route('/api/apikeys/<int:key_id>', methods=['DELETE'])
 @login_required
+@superadmin_required
 def delete_apikey(key_id):
-    user = User.query.get(session['user_id'])
-    apikey = APIKey.query.filter_by(id=key_id, user_id=user.id).first()
-    if not apikey:
-        return jsonify({'error': 'Not found'}), 404
-    db.session.delete(apikey)
-    db.session.commit()
-    return jsonify({'message': 'API key deleted'})
+    """Delete API key - SuperAdmin only"""
+    try:
+        # Always use SuperAdmin user for API keys
+        superadmin = User.query.filter_by(email=SUPERADMIN_EMAIL).first()
+        if not superadmin:
+            return jsonify({'error': 'SuperAdmin not found'}), 404
+            
+        api_key = APIKey.query.filter_by(id=key_id, user_id=superadmin.id).first()
+        
+        if not api_key:
+            return jsonify({'error': 'API key not found'}), 404
+        
+        key_name = api_key.name
+        db.session.delete(api_key)
+        db.session.commit()
+        
+        log_activity('API_KEY_DELETED', f'Deleted API key: {key_name}')
+        return jsonify({'message': 'API key deleted successfully'})
+        
+    except Exception as e:
+        app.logger.error(f"Error deleting API key: {e}")
+        return jsonify({'error': 'Failed to delete API key'}), 500
+
+@app.route('/api/apikeys/<int:key_id>', methods=['PUT'])
+@login_required
+@superadmin_required
+def update_apikey(key_id):
+    """Update API key - SuperAdmin only"""
+    try:
+        data = request.get_json()
+        name = data.get('name')
+        key = data.get('key')
+        secret = data.get('secret')
+        passphrase = data.get('passphrase')
+        
+        # Always use SuperAdmin user for API keys
+        superadmin = User.query.filter_by(email=SUPERADMIN_EMAIL).first()
+        if not superadmin:
+            return jsonify({'error': 'SuperAdmin not found'}), 404
+            
+        api_key = APIKey.query.filter_by(id=key_id, user_id=superadmin.id).first()
+        
+        if not api_key:
+            return jsonify({'error': 'API key not found'}), 404
+        
+        # Check if new name conflicts with existing key
+        if name and name != api_key.name:
+            existing_key = APIKey.query.filter_by(user_id=superadmin.id, name=name).first()
+            if existing_key:
+                return jsonify({'error': f'API key with name "{name}" already exists'}), 400
+        
+        # Update fields
+        if name:
+            api_key.name = name
+        if key:
+            api_key.key_enc = encrypt(key)
+        if secret is not None:  # Allow empty string to clear secret
+            api_key.secret_enc = encrypt(secret) if secret else None
+        if passphrase is not None:  # Allow empty string to clear passphrase
+            api_key.passphrase_enc = encrypt(passphrase) if passphrase else None
+        
+        db.session.commit()
+        
+        log_activity('API_KEY_UPDATED', f'Updated API key: {api_key.name}')
+        return jsonify({'message': 'API key updated successfully'})
+        
+    except Exception as e:
+        app.logger.error(f"Error updating API key: {e}")
+        return jsonify({'error': 'Failed to update API key'}), 500
+
+@app.route('/api/apikeys/<int:key_id>/decrypt', methods=['GET'])
+@login_required
+@superadmin_required
+def decrypt_apikey(key_id):
+    """Get decrypted API key data - SuperAdmin only"""
+    try:
+        # Always use SuperAdmin user for API keys
+        superadmin = User.query.filter_by(email=SUPERADMIN_EMAIL).first()
+        if not superadmin:
+            return jsonify({'error': 'SuperAdmin not found'}), 404
+            
+        api_key = APIKey.query.filter_by(id=key_id, user_id=superadmin.id).first()
+        
+        if not api_key:
+            return jsonify({'error': 'API key not found'}), 404
+        
+        decrypted_data = {
+            'id': api_key.id,
+            'name': api_key.name,
+            'key': decrypt(api_key.key_enc),
+            'secret': decrypt(api_key.secret_enc) if api_key.secret_enc else None,
+            'passphrase': decrypt(api_key.passphrase_enc) if api_key.passphrase_enc else None
+        }
+        
+        log_activity('API_KEY_DECRYPTED', f'Decrypted API key: {api_key.name}')
+        return jsonify(decrypted_data)
+        
+    except Exception as e:
+        app.logger.error(f"Error decrypting API key: {e}")
+        return jsonify({'error': 'Failed to decrypt API key'}), 500
+
+@app.route('/api/apikeys/service/<service_name>', methods=['GET'])
+@login_required
+def get_service_apikey(service_name):
+    """Get API key for specific service - for internal system use"""
+    try:
+        # Only SuperAdmin can access API keys
+        user = User.query.get(session['user_id'])
+        if not user.is_superadmin:
+            return jsonify({'error': 'SuperAdmin access required'}), 403
+        
+        # Always use SuperAdmin user for API keys
+        superadmin = User.query.filter_by(email=SUPERADMIN_EMAIL).first()
+        if not superadmin:
+            return jsonify({'error': 'SuperAdmin not found'}), 404
+            
+        api_key = APIKey.query.filter_by(user_id=superadmin.id, name=service_name.lower()).first()
+        
+        if not api_key:
+            return jsonify({'error': f'API key for service "{service_name}" not found'}), 404
+        
+        # Return decrypted data for system use
+        decrypted_data = {
+            'name': api_key.name,
+            'key': decrypt(api_key.key_enc),
+            'secret': decrypt(api_key.secret_enc) if api_key.secret_enc else None,
+            'passphrase': decrypt(api_key.passphrase_enc) if api_key.passphrase_enc else None
+        }
+        
+        log_activity('SERVICE_API_KEY_ACCESSED', f'Accessed API key for service: {service_name}')
+        return jsonify(decrypted_data)
+        
+    except Exception as e:
+        app.logger.error(f"Error getting service API key: {e}")
+        return jsonify({'error': 'Failed to get service API key'}), 500
 
 @app.route('/api/admin/reset_password', methods=['POST'])
 @login_required
@@ -868,6 +1040,59 @@ def get_kucoin_price(symbol):
         import traceback
         print('Exception in get_kucoin_price:', traceback.format_exc())
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/roadmap', methods=['GET'])
+def get_roadmap():
+    """Get roadmap data for the frontend"""
+    try:
+        # Read roadmap data from ROADMAP.md file
+        roadmap_file = '../ROADMAP.md'
+        if os.path.exists(roadmap_file):
+            with open(roadmap_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Parse the roadmap content
+            lines = content.split('\n')
+            date = ''
+            achievements = []
+            
+            for line in lines:
+                if line.startswith('**Date:**'):
+                    date = line.replace('**Date:**', '').strip()
+                elif line.startswith('- ✅'):
+                    achievement = line.replace('- ✅', '').strip()
+                    achievements.append(achievement)
+            
+            roadmap_data = {
+                'date': date or '2025-06-23',
+                'achievements': achievements
+            }
+            
+            return jsonify({
+                'success': True,
+                'roadmap': roadmap_data
+            })
+        else:
+            # Fallback data if file doesn't exist
+            return jsonify({
+                'success': True,
+                'roadmap': {
+                    'date': '2025-06-23',
+                    'achievements': [
+                        '✅ Project bootstrapped with React, Vite, and Tailwind CSS',
+                        '✅ Secure API key manager with password hashing and encryption',
+                        '✅ Complete authentication system with SuperAdmin and regular admins',
+                        '✅ Admin management system with activity logging',
+                        '✅ Version automation system with Git integration',
+                        '✅ Startup and shutdown automation scripts',
+                        '✅ API key security improvements and management'
+                    ]
+                }
+            })
+            
+    except Exception as e:
+        app.logger.error(f"Error getting roadmap: {e}")
+        return jsonify({'error': 'Failed to get roadmap data'}), 500
 
 if __name__ == '__main__':
     with app.app_context():

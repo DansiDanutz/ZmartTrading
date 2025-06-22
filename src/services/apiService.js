@@ -1,4 +1,5 @@
 import axios from 'axios';
+import CryptoJS from 'crypto-js';
 import { apiStorage } from './apiStorage';
 
 class APIService {

@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import Documentation from './components/Documentation';
 import Settings from './components/Settings';
 import Login from './components/Login';
+import APIManager from './components/APIManager';
 import { ErrorBoundary } from 'react-error-boundary';
 import axios from 'axios';
 
@@ -57,10 +58,12 @@ export default function App() {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard />;
-      case 'documentation':
+      case 'roadmap':
         return <Documentation />;
       case 'settings':
         return <Settings />;
+      case 'api':
+        return <APIManager />;
       default:
         return <div className="p-8 text-xl">This page is under development.</div>;
     }
