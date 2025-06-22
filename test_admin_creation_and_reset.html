@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Creation & Password Reset Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+        }
+        .section { 
+            margin-bottom: 40px; 
+            padding: 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            background: #fafafa; 
+        }
+        .section h3 { 
+            margin-top: 0; 
+            color: #333; 
+            border-bottom: 2px solid #007bff; 
+            padding-bottom: 10px; 
+        }
+        .step { 
+            margin-bottom: 20px; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            background: white; 
+        }
+        .success { 
+            background: #d4edda; 
+            border-color: #c3e6cb; 
+            color: #155724; 
+        }
+        .error { 
+            background: #f8d7da; 
+            border-color: #f5c6cb; 
+            color: #721c24; 
+        }
+        .info { 
+            background: #d1ecf1; 
+            border-color: #bee5eb; 
+            color: #0c5460; 
+        }
+        .warning { 
+            background: #fff3cd; 
+            border-color: #ffeaa7; 
+            color: #856404; 
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        input, button { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 14px; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            margin-top: 10px; 
+        }
+        button:hover { 
+            background: #0056b3; 
+        }
+        button:disabled { 
+            background: #6c757d; 
+            cursor: not-allowed; 
+        }
+        .log { 
+            background: #f8f9fa; 
+            border: 1px solid #dee2e6; 
+            border-radius: 4px; 
+            padding: 10px; 
+            margin-top: 10px; 
+            font-family: monospace; 
+            font-size: 12px; 
+            max-height: 200px; 
+            overflow-y: auto; 
+        }
+        .status { 
+            padding: 10px; 
+            border-radius: 4px; 
+            margin: 10px 0; 
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 20px; 
+        }
+        @media (max-width: 768px) {
+            .grid { 
+                grid-template-columns: 1fr; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Admin Creation & Password Reset Test</h1>
+        <p style="color: #b00; font-weight: bold;">Note: All verification codes will be sent to the MasterAdmin email: <b>seme@kryptostack.com</b></p>
+        
+        <div class="section">
+            <h3>📋 Test Overview</h3>
+            <div class="step info">
+                <h4>What this test does:</h4>
+                <ol>
+                    <li><strong>Login as SuperAdmin</strong> - Authenticate as MasterAdmin</li>
+                    <li><strong>Create New Admin</strong> - Create a new admin account (inactive)</li>
+                    <li><strong>Confirm Admin</strong> - Activate admin using code from MasterAdmin email</li>
+                    <li><strong>Test Admin Login</strong> - Login as the new admin</li>
+                    <li><strong>Test Password Reset</strong> - Reset admin password (code goes to MasterAdmin)</li>
+                    <li><strong>Verify New Password</strong> - Login with new password</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Section 1: SuperAdmin Login -->
+            <div class="section">
+                <h3>1️⃣ SuperAdmin Login</h3>
+                <div class="step">
+                    <div class="form-group">
+                        <label>Email:</label>
+                        <input type="email" id="superadminEmail" value="seme@kryptostack.com" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Password:</label>
+                        <input type="password" id="superadminPassword" value="Seme0504" readonly>
+                    </div>
+                    <button onclick="loginAsSuperAdmin()">Login as SuperAdmin</button>
+                </div>
+                <div id="loginStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Section 2: Create Admin -->
+            <div class="section">
+                <h3>2️⃣ Create New Admin</h3>
+                <div class="step">
+                    <div class="form-group">
+                        <label>Admin Email:</label>
+                        <input type="email" id="newAdminEmail" placeholder="admin1@zmart.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Name:</label>
+                        <input type="text" id="newAdminName" placeholder="Admin User">
+                    </div>
+                    <div class="form-group">
+                        <label>Temporary Password:</label>
+                        <input type="password" id="tempPassword" value="TempPass123!">
+                    </div>
+                    <button onclick="createAdmin()" id="btnCreateAdmin" disabled>Create Admin</button>
+                </div>
+                <div id="createStatus" class="status" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Section 3: Confirm Admin -->
+            <div class="section">
+                <h3>3️⃣ Confirm Admin (Activate)</h3>
+                <div class="step">
+                    <div class="form-group">
+                        <label>Confirmation Code (from MasterAdmin email):</label>
+                        <input type="text" id="confirmCode" placeholder="Enter 6-digit code">
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Email to Confirm:</label>
+                        <input type="email" id="adminEmailToConfirm" placeholder="admin1@zmart.com">
+                    </div>
+                    <button onclick="confirmAdmin()" id="btnConfirmAdmin" disabled>Confirm & Activate Admin</button>
+                </div>
+                <div id="confirmStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Section 4: Test Admin Login -->
+            <div class="section">
+                <h3>4️⃣ Test Admin Login</h3>
+                <div class="step">
+                    <div class="form-group">
+                        <label>Admin Email:</label>
+                        <input type="email" id="adminLoginEmail" placeholder="admin1@zmart.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Admin Password:</label>
+                        <input type="password" id="adminLoginPassword" value="TempPass123!">
+                    </div>
+                    <button onclick="loginAsAdmin()" id="btnLoginAdmin" disabled>Login as Admin</button>
+                </div>
+                <div id="adminLoginStatus" class="status" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <!-- Section 5: Request Password Reset -->
+            <div class="section">
+                <h3>5️⃣ Request Password Reset</h3>
+                <div class="step">
+                    <div class="form-group">
+                        <label>Admin Email for Reset:</label>
+                        <input type="email" id="resetEmail" placeholder="admin1@zmart.com">
+                    </div>
+                    <button onclick="requestPasswordReset()" id="btnRequestReset" disabled>Request Reset Code</button>
+                    <p style="font-size: 12px; color: #666;">Code will be sent to MasterAdmin email</p>
+                </div>
+                <div id="resetStatus" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Section 6: Complete Password Reset -->
+            <div class="section">
+                <h3>6️⃣ Complete Password Reset</h3>
+                <div class="step">
+                    <div class="form-group">
+                        <label>Reset Code (from MasterAdmin email):</label>
+                        <input type="text" id="resetCode" placeholder="Enter 6-digit code">
+                    </div>
+                    <div class="form-group">
+                        <label>New Password:</label>
+                        <input type="password" id="newPassword" value="NewPass123!">
+                    </div>
+                    <button onclick="completePasswordReset()" id="btnCompleteReset" disabled>Reset Password</button>
+                </div>
+                <div id="completeResetStatus" class="status" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Section 7: Test New Password -->
+        <div class="section">
+            <h3>7️⃣ Test New Password</h3>
+            <div class="step">
+                <div class="form-group">
+                    <label>Admin Email:</label>
+                    <input type="email" id="testLoginEmail" placeholder="admin1@zmart.com">
+                </div>
+                <div class="form-group">
+                    <label>New Password:</label>
+                    <input type="password" id="testLoginPassword" value="NewPass123!">
+                </div>
+                <button onclick="testNewPassword()" id="btnTestPassword" disabled>Test Login with New Password</button>
+            </div>
+            <div id="testPasswordStatus" class="status" style="display: none;"></div>
+        </div>
+
+        <!-- Log Section -->
+        <div class="section">
+            <h3>📝 Test Log</h3>
+            <div id="testLog" class="log"></div>
+            <button onclick="clearLog()" style="margin-top: 10px;">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let currentSession = null;
+
+        function log(message, isError = false) {
+            const logDiv = document.getElementById('testLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.style.color = isError ? '#dc3545' : '#28a745';
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('testLog').innerHTML = '';
+        }
+
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+            element.style.display = 'block';
+        }
+
+        async function makeRequest(method, endpoint, data = null) {
+            const url = `${API_BASE}${endpoint}`;
+            const options = {
+                method: method.toUpperCase(),
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(url, options);
+                const responseData = await response.json();
+                return { status: response.status, data: responseData };
+            } catch (error) {
+                log(`Request failed: ${error.message}`, true);
+                return { status: 0, data: { error: error.message } };
+            }
+        }
+
+        // 1. Login as SuperAdmin
+        async function loginAsSuperAdmin() {
+            log('Logging in as SuperAdmin...');
+            const email = document.getElementById('superadminEmail').value;
+            const password = document.getElementById('superadminPassword').value;
+
+            const response = await makeRequest('POST', '/login', { email, password });
+
+            if (response.status === 200) {
+                log('✅ SuperAdmin login successful');
+                showStatus('loginStatus', 'SuperAdmin login successful', 'success');
+                document.getElementById('btnCreateAdmin').disabled = false;
+                currentSession = response.data;
+            } else {
+                log(`❌ SuperAdmin login failed: ${response.data.error}`, true);
+                showStatus('loginStatus', `Login failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // 2. Create Admin
+        async function createAdmin() {
+            log('Creating new admin...');
+            const email = document.getElementById('newAdminEmail').value;
+            const name = document.getElementById('newAdminName').value;
+            const tempPassword = document.getElementById('tempPassword').value;
+
+            if (!email || !name || !tempPassword) {
+                log('❌ Please fill in all fields', true);
+                return;
+            }
+
+            const response = await makeRequest('POST', '/auth/create-admin', {
+                email, name, temp_password: tempPassword
+            });
+
+            if (response.status === 200) {
+                log('✅ Admin created successfully');
+                log('📧 Confirmation code sent to MasterAdmin email (seme@kryptostack.com)');
+                showStatus('createStatus', 'Admin created. Check MasterAdmin email for confirmation code.', 'success');
+                document.getElementById('btnConfirmAdmin').disabled = false;
+                document.getElementById('adminEmailToConfirm').value = email;
+                document.getElementById('adminLoginEmail').value = email;
+                document.getElementById('resetEmail').value = email;
+                document.getElementById('testLoginEmail').value = email;
+            } else {
+                log(`❌ Admin creation failed: ${response.data.error}`, true);
+                showStatus('createStatus', `Creation failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // 3. Confirm Admin
+        async function confirmAdmin() {
+            log('Confirming admin...');
+            const code = document.getElementById('confirmCode').value;
+            const adminEmail = document.getElementById('adminEmailToConfirm').value;
+
+            if (!code || !adminEmail) {
+                log('❌ Please enter confirmation code and admin email', true);
+                return;
+            }
+
+            const response = await makeRequest('POST', '/auth/confirm-admin', {
+                code, admin_email: adminEmail
+            });
+
+            if (response.status === 200) {
+                log('✅ Admin confirmed and activated successfully');
+                showStatus('confirmStatus', 'Admin confirmed and activated!', 'success');
+                document.getElementById('btnLoginAdmin').disabled = false;
+            } else {
+                log(`❌ Admin confirmation failed: ${response.data.error}`, true);
+                showStatus('confirmStatus', `Confirmation failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // 4. Login as Admin
+        async function loginAsAdmin() {
+            log('Logging in as admin...');
+            const email = document.getElementById('adminLoginEmail').value;
+            const password = document.getElementById('adminLoginPassword').value;
+
+            const response = await makeRequest('POST', '/login', { email, password });
+
+            if (response.status === 200) {
+                log('✅ Admin login successful');
+                showStatus('adminLoginStatus', 'Admin login successful', 'success');
+                document.getElementById('btnRequestReset').disabled = false;
+            } else {
+                log(`❌ Admin login failed: ${response.data.error}`, true);
+                showStatus('adminLoginStatus', `Login failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // 5. Request Password Reset
+        async function requestPasswordReset() {
+            log('Requesting password reset...');
+            const email = document.getElementById('resetEmail').value;
+
+            const response = await makeRequest('POST', '/auth/request-reset-code', { email });
+
+            if (response.status === 200) {
+                log('✅ Password reset code requested');
+                log('📧 Reset code sent to MasterAdmin email (seme@kryptostack.com)');
+                showStatus('resetStatus', 'Reset code sent to MasterAdmin email.', 'success');
+                document.getElementById('btnCompleteReset').disabled = false;
+            } else {
+                log(`❌ Password reset request failed: ${response.data.error}`, true);
+                showStatus('resetStatus', `Request failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // 6. Complete Password Reset
+        async function completePasswordReset() {
+            log('Completing password reset...');
+            const email = document.getElementById('resetEmail').value;
+            const code = document.getElementById('resetCode').value;
+            const newPassword = document.getElementById('newPassword').value;
+
+            if (!code || !newPassword) {
+                log('❌ Please enter reset code and new password', true);
+                return;
+            }
+
+            const response = await makeRequest('POST', '/auth/verify-reset-code', {
+                email, code, new_password: newPassword
+            });
+
+            if (response.status === 200) {
+                log('✅ Password reset completed successfully');
+                showStatus('completeResetStatus', 'Password reset completed!', 'success');
+                document.getElementById('btnTestPassword').disabled = false;
+                document.getElementById('testLoginPassword').value = newPassword;
+            } else {
+                log(`❌ Password reset failed: ${response.data.error}`, true);
+                showStatus('completeResetStatus', `Reset failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // 7. Test New Password
+        async function testNewPassword() {
+            log('Testing login with new password...');
+            const email = document.getElementById('testLoginEmail').value;
+            const password = document.getElementById('testLoginPassword').value;
+
+            const response = await makeRequest('POST', '/login', { email, password });
+
+            if (response.status === 200) {
+                log('✅ Login with new password successful!');
+                showStatus('testPasswordStatus', 'Login with new password successful!', 'success');
+                log('🎉 Complete admin creation and password reset test PASSED!');
+            } else {
+                log(`❌ Login with new password failed: ${response.data.error}`, true);
+                showStatus('testPasswordStatus', `Login failed: ${response.data.error}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Admin Creation & Password Reset Test initialized');
+            log('📧 Remember: All codes are sent to MasterAdmin email (seme@kryptostack.com)');
+        });
+    </script>
+</body>
+</html> 

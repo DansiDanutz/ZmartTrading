@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Session Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { margin: 5px; padding: 10px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Session Test</h1>
+    
+    <div class="test-section">
+        <h3>Login Test</h3>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Session Test</h3>
+        <button onclick="testSession()">Check Session</button>
+        <div id="sessionResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Logout Test</h3>
+        <button onclick="testLogout()">Test Logout</button>
+        <div id="logoutResult"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Re-Login Test</h3>
+        <button onclick="testReLogin()">Test Re-Login</button>
+        <div id="reLoginResult"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        function showResult(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            element.className = isError ? 'error' : 'success';
+            element.innerHTML = `<pre>${message}</pre>`;
+        }
+        
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'seme@kryptostack.com',
+                        password: 'Seme0504'
+                    })
+                });
+                
+                const data = await response.json();
+                showResult('loginResult', 
+                    `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`,
+                    response.status !== 200
+                );
+            } catch (error) {
+                showResult('loginResult', `Error: ${error.message}`, true);
+            }
+        }
+        
+        async function testSession() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/session`, {
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('sessionResult', 
+                    `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`,
+                    response.status !== 200
+                );
+            } catch (error) {
+                showResult('sessionResult', `Error: ${error.message}`, true);
+            }
+        }
+        
+        async function testLogout() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                showResult('logoutResult', 
+                    `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`,
+                    response.status !== 200
+                );
+            } catch (error) {
+                showResult('logoutResult', `Error: ${error.message}`, true);
+            }
+        }
+        
+        async function testReLogin() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'seme@kryptostack.com',
+                        password: 'Seme0504'
+                    })
+                });
+                
+                const data = await response.json();
+                showResult('reLoginResult', 
+                    `Status: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`,
+                    response.status !== 200
+                );
+            } catch (error) {
+                showResult('reLoginResult', `Error: ${error.message}`, true);
+            }
+        }
+    </script>
+</body>
+</html> 

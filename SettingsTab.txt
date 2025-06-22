@@ -1,0 +1,55 @@
+# ZmartTrading – SuperAdmin & Admin Auth System
+
+## SuperAdmin Account
+- **Email**: seme@kryptostack.com
+- This is the only SuperAdmin.
+- Has full access to the "Settings" tab.
+- Can:
+  - Change their password (only by receiving a verification code via email).
+  - Create/Delete Admin accounts.
+  - Approve Admins by entering verification codes sent to their email.
+
+## Authentication Workflow
+
+### 1. SuperAdmin Password Reset
+- Accessible only when logged in as `seme@kryptostack.com`.
+- Click "Settings" → "Change Password".
+- A **verification code** is sent to `seme@kryptostack.com`.
+- Enter code to confirm identity before changing password.
+
+### 2. Admin Management (from Settings)
+- Only visible and functional when logged in as SuperAdmin.
+- Can:
+  - Create Admin accounts (email, name, temp password).
+  - Delete Admin accounts.
+- After Admin creation:
+  - A **verification code** is sent to the SuperAdmin email.
+  - Admin is **inactive** until SuperAdmin enters the code and confirms.
+
+### 3. Admin Login
+- After confirmation by SuperAdmin, Admins can log in normally.
+- Admins can access the Dashboard.
+
+### 4. Admin Password Reset
+- "Forgot Password?" flow:
+  - Admin enters their email.
+  - A **reset code** is sent to the email.
+  - Admin enters the code and sets a new password.
+
+## Frontend Requirements
+
+### Settings Tab
+- Only visible if user is `seme@kryptostack.com`.
+- Sections:
+  - 🔐 Change SuperAdmin Password (email code required)
+  - 👤 Admin Management:
+    - Create New Admin (email input, temporary password, send code to SuperAdmin)
+    - Delete Admin
+    - View Pending Admins (status: confirmed / not confirmed)
+
+---
+
+## Notes
+- All email verification codes must expire in 10 minutes.
+- Use secure methods to store password hashes (e.g., bcrypt).
+- Code sending and confirmation system must be implemented using a backend email service (e.g., Nodemailer).
