@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 const Roadmap = () => {
   const [roadmapData, setRoadmapData] = useState({
     date: '2025-06-24',
-    achievements: [            "✅ Version V4 - Version V4 -  & Frontend improvements & Backend enhancements",
-"✅ Version V4 - Complete UI/UX overhaul with dark theme, professional styling, and version automation system",
+    achievements: [
+      "✅ Version V4 - Complete UI/UX overhaul with dark theme, professional styling, and version automation system",
       "✅ Version V3 - Complete Authentication & Admin Management System",
       "✅ Project bootstrapped with React, Vite, and Tailwind CSS",
       "✅ Secure API key manager with password hashing and encryption",
@@ -12,16 +12,18 @@ const Roadmap = () => {
       "✅ API Manager: add, view, and delete API keys (KuCoin, Cryptometer, etc.)",
       "✅ Backend Flask server with user/session management and CORS",
       "✅ KuCoin price proxy endpoint (secure, uses stored API keys)",
-      "✅ Frontend KucoinPrice component fetches live BTC/USDT price",
-      "✅ Debugged and fixed CSS import order for Vite compatibility",
-      "✅ Fixed FERNET_KEY for consistent encryption/decryption",
-      "✅ End-to-end test: KuCoin API key securely stored, price fetch works",
-      "✅ Documentation tab with Roadmap and achievements",
-      "✅ Complete authentication system with SuperAdmin and regular admins",
-      "✅ Admin management system with activity logging",
+      "✅ Frontend KucoinPrice component with real-time price updates",
+      "✅ User authentication system with login/logout functionality",
+      "✅ Admin management system with user creation and password reset",
+      "✅ Email functionality for password reset and notifications",
+      "✅ Dashboard with metric cards (Total Profit, Total Trades, etc.)",
+      "✅ Sidebar navigation with active state management",
+      "✅ Settings page with system configuration options",
+      "✅ Documentation page with project information",
       "✅ Version automation system with Git integration",
       "✅ Startup and shutdown automation scripts",
-      "✅ API key security improvements and management"]
+      "✅ API key security improvements and management"
+    ]
   });
   const [loading, setLoading] = useState(true);
 
@@ -39,25 +41,27 @@ const Roadmap = () => {
         // Fallback to static data
         setRoadmapData({
           date: '2025-06-24',
-          achievements: [            "✅ Version V4 - Version V4 -  & Frontend improvements & Backend enhancements",
-"✅ Version V4 - Complete UI/UX overhaul with dark theme, professional styling, and version automation system",
-      "✅ Version V3 - Complete Authentication & Admin Management System",
-      "✅ Project bootstrapped with React, Vite, and Tailwind CSS",
-      "✅ Secure API key manager with password hashing and encryption",
-      "✅ Persistent password and API key storage (localStorage + encryption)",
-      "✅ API Manager: add, view, and delete API keys (KuCoin, Cryptometer, etc.)",
-      "✅ Backend Flask server with user/session management and CORS",
-      "✅ KuCoin price proxy endpoint (secure, uses stored API keys)",
-      "✅ Frontend KucoinPrice component fetches live BTC/USDT price",
-      "✅ Debugged and fixed CSS import order for Vite compatibility",
-      "✅ Fixed FERNET_KEY for consistent encryption/decryption",
-      "✅ End-to-end test: KuCoin API key securely stored, price fetch works",
-      "✅ Documentation tab with Roadmap and achievements",
-      "✅ Complete authentication system with SuperAdmin and regular admins",
-      "✅ Admin management system with activity logging",
-      "✅ Version automation system with Git integration",
-      "✅ Startup and shutdown automation scripts",
-      "✅ API key security improvements and management"]
+          achievements: [
+            "✅ Version V4 - Complete UI/UX overhaul with dark theme, professional styling, and version automation system",
+            "✅ Version V3 - Complete Authentication & Admin Management System",
+            "✅ Project bootstrapped with React, Vite, and Tailwind CSS",
+            "✅ Secure API key manager with password hashing and encryption",
+            "✅ Persistent password and API key storage (localStorage + encryption)",
+            "✅ API Manager: add, view, and delete API keys (KuCoin, Cryptometer, etc.)",
+            "✅ Backend Flask server with user/session management and CORS",
+            "✅ KuCoin price proxy endpoint (secure, uses stored API keys)",
+            "✅ Frontend KucoinPrice component with real-time price updates",
+            "✅ User authentication system with login/logout functionality",
+            "✅ Admin management system with user creation and password reset",
+            "✅ Email functionality for password reset and notifications",
+            "✅ Dashboard with metric cards (Total Profit, Total Trades, etc.)",
+            "✅ Sidebar navigation with active state management",
+            "✅ Settings page with system configuration options",
+            "✅ Documentation page with project information",
+            "✅ Version automation system with Git integration",
+            "✅ Startup and shutdown automation scripts",
+            "✅ API key security improvements and management"
+          ]
         });
       })
       .finally(() => {

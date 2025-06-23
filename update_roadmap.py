@@ -141,10 +141,11 @@ def commit_to_git(version, description):
         commit_message = f"Version {version}: {description}"
         subprocess.run(["git", "commit", "-m", commit_message], check=True)
         
-        # Create and push tag
-        subprocess.run(["git", "tag", f"v{version}"], check=True)
+        # Create and push tag (use lowercase v for tag)
+        tag_name = f"v{version.lower().replace('v', '')}"
+        subprocess.run(["git", "tag", tag_name], check=True)
         subprocess.run(["git", "push", "origin", "main"], check=True)
-        subprocess.run(["git", "push", "origin", f"v{version}"], check=True)
+        subprocess.run(["git", "push", "origin", tag_name], check=True)
         
         print(f"✅ Successfully committed and tagged Version {version}")
         return True
