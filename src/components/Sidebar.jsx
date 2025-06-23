@@ -2,31 +2,33 @@ import logoZmart from '../assets/logoZmart.png';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5001/api';
 
 const menu = [
-  { label: 'Quick Trade', icon: '⚡' },
-  { label: 'Analytics', icon: '📈' },
-  { label: 'Symbols', icon: '⌗' },
-  { label: 'Scoring', icon: '⭘', sub: [
-    { label: 'Cryptometer', icon: '🧮' },
-    { label: 'RiskMetric', icon: '🛡️' },
-    { label: 'KingFisher', icon: '🧊' },
+  { label: 'quick-trade', display: 'Quick Trade', icon: '⚡' },
+  { label: 'analytics', display: 'Analytics', icon: '📈' },
+  { label: 'symbols', display: 'Symbols', icon: '⌗' },
+  { label: 'scoring', display: 'Scoring', icon: '⭘', sub: [
+    { label: 'cryptometer', display: 'Cryptometer', icon: '🧮' },
+    { label: 'riskmetric', display: 'RiskMetric', icon: '🛡️' },
+    { label: 'kingfisher', display: 'KingFisher', icon: '🧊' },
   ]},
-  { label: 'Vaults', icon: '🔒' },
-  { label: 'Investors', icon: '👤' },
-  { label: 'History', icon: '🕒' },
-  { label: 'Blog', icon: '📄' },
-  { label: 'Roadmap', icon: '🚂' },
-  { label: 'Examples', icon: '📚' },
-  { label: 'API', icon: '🛠️' },
-  { label: 'Website', icon: '🌐' },
+  { label: 'vaults', display: 'Vaults', icon: '🔒' },
+  { label: 'investors', display: 'Investors', icon: '👤' },
+  { label: 'history', display: 'History', icon: '🕒' },
+  { label: 'blog', display: 'Blog', icon: '📄' },
+  { label: 'roadmap', display: 'Roadmap', icon: '🚂' },
+  { label: 'examples', display: 'Examples', icon: '📚' },
+  { label: 'api', display: 'API', icon: '🛠️' },
+  { label: 'website', display: 'Website', icon: '🌐' },
 ];
 
-export default function Sidebar({ setCurrentPage }) {
+export default function Sidebar({ setCurrentPage, currentPage }) {
   const [scoringOpen, setScoringOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(null);
+  const [logoClicked, setLogoClicked] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -37,7 +39,7 @@ export default function Sidebar({ setCurrentPage }) {
       const response = await axios.get(`${API_BASE_URL}/session`, { withCredentials: true });
       setUser(response.data.user);
     } catch (error) {
-      console.error('Error fetching user:', error);
+      // silent fail
     } finally {
       setLoading(false);
     }
@@ -46,103 +48,144 @@ export default function Sidebar({ setCurrentPage }) {
   // Add Settings to menu if user is SuperAdmin
   const getMenuItems = () => {
     const items = [...menu];
-    
-    // Add Settings tab only for SuperAdmin
     if (user?.is_superadmin) {
-      items.push({ label: 'Settings', icon: '⚙️' });
+      items.push({ label: 'settings', display: 'Settings', icon: '⚙️' });
     }
-    
     return items;
   };
 
-  if (loading) {
-    return (
-      <aside className="sidebar">
-        <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 32px 32px 32px', background: 'transparent' }}>
-          <img
-            src={logoZmart}
-            alt="Zmart Trading Bot Logo"
-            style={{
-              width: '100%',
-              maxWidth: 420,
-              height: 'auto',
-              borderRadius: 24,
-              boxShadow: '0 0 32px 4px #22ff88, 0 0 0 2px #222 inset',
-              background: 'linear-gradient(120deg, rgba(34,255,136,0.08) 0%, rgba(34,255,136,0.02) 100%)',
-              filter: 'drop-shadow(0 0 16px #22ff88) drop-shadow(0 0 2px #222)',
-              objectFit: 'contain',
-              display: 'block',
-            }}
-          />
-        </div>
-        <div className="text-center text-gray-400">Loading...</div>
-      </aside>
-    );
-  }
+  const handleLogoClick = () => {
+    setLogoClicked(true);
+    setCurrentPage('dashboard');
+    // Reset active tab state when logo is clicked
+    setActiveTab(null);
+    
+    // Reset the click effect after animation
+    setTimeout(() => {
+      setLogoClicked(false);
+    }, 300);
+  };
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px 32px 32px 32px', background: 'transparent', cursor: 'pointer' }} onClick={() => setCurrentPage('dashboard')}>
-        <img
-          src={logoZmart}
-          alt="Zmart Trading Bot Logo"
-          style={{
-            width: '100%',
-            maxWidth: 420,
-            height: 'auto',
-            borderRadius: 24,
-            boxShadow: '0 0 32px 4px #22ff88, 0 0 0 2px #222 inset',
-            background: 'linear-gradient(120deg, rgba(34,255,136,0.08) 0%, rgba(34,255,136,0.02) 100%)',
-            filter: 'drop-shadow(0 0 16px #22ff88) drop-shadow(0 0 2px #222)',
-            objectFit: 'contain',
-            display: 'block',
-          }}
+    <aside className="relative z-20 w-72 min-h-screen bg-[#181A20] border-r border-[#23272F] flex flex-col shadow-2xl">
+      {/* Logo */}
+      <div className="flex flex-col items-center py-8 cursor-pointer select-none" onClick={handleLogoClick}>
+        <img 
+          src={logoZmart} 
+          alt="Zmart Trading Bot Logo" 
+          className={`w-32 h-32 rounded-2xl shadow-lg border-2 border-[#23272F] object-contain mb-2 transition-all duration-200 hover:ring-4 hover:ring-[#00FF94]/30 ${
+            logoClicked 
+              ? 'scale-95 ring-4 ring-[#00FF94]/50 shadow-[0_0_20px_rgba(0,255,148,0.3)]' 
+              : 'scale-100'
+          }`} 
         />
+        <span className={`text-white text-2xl font-bold tracking-wide mt-2 transition-all duration-200 ${
+          logoClicked ? 'text-[#00FF94] scale-105' : ''
+        }`}>
+          ZmartTrading
+        </span>
       </div>
-      
+
       {/* User Info */}
       {user && (
-        <div className="px-4 py-2 mb-4 border-b border-gray-700">
-          <div className="text-sm text-gray-300">
-            <div className="font-medium">{user.name || user.email}</div>
-            <div className="text-xs text-gray-500">
-              {user.is_superadmin ? 'SuperAdmin' : user.is_admin ? 'Admin' : 'User'}
+        <div className="mx-6 mb-6 p-4 rounded-xl bg-[#181A20] border border-[#23272F] flex items-center gap-4 shadow">
+          <div className="w-12 h-12 bg-[#00FF94] rounded-full flex items-center justify-center text-[#181A20] text-xl font-bold">
+            {(user.name || user.email).charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <div className="text-white font-semibold text-lg leading-tight">{user.name || user.email}</div>
+            <div className="text-xs text-[#00FF94] font-medium">
+              {user.is_superadmin ? 'Super Admin' : user.is_admin ? 'Administrator' : 'User'}
             </div>
           </div>
         </div>
       )}
-      
-      <nav className="sidebar-menu" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {getMenuItems().map((item) => (
-          item.label === 'Scoring' ? (
-            <div key={item.label} style={{ display: 'flex', flexDirection: 'column' }}>
-              <div className="sidebar-menu-item" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => setScoringOpen(v => !v)}>
-                <span className="sidebar-menu-icon">{item.icon}</span>
-                <span>{item.label}</span>
-                <span style={{ marginLeft: 'auto', fontSize: '1.1em', color: '#22ff88' }}>{scoringOpen ? '▾' : '▸'}</span>
-              </div>
-              {scoringOpen && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginLeft: 32, borderLeft: '2px solid #22ff88', paddingLeft: 16, marginTop: 2 }}>
-                  {item.sub.map(sub => (
-                    <div key={sub.label} className="sidebar-menu-item" style={{ fontSize: '1rem', color: '#b0ffcc', padding: '6px 0', display: 'flex', alignItems: 'center', gap: 10, fontWeight: 500 }}>
-                      <span className="sidebar-menu-icon">{sub.icon}</span>
-                      <span>{sub.label}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div key={item.label} className="sidebar-menu-item" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => setCurrentPage(item.label.toLowerCase())}>
-              <span className="sidebar-menu-icon">{item.icon}</span>
-              <span>{item.label}</span>
-              {item.label === 'Settings' && user?.is_superadmin && (
-                <span style={{ marginLeft: 'auto', fontSize: '0.8em', color: '#22ff88' }}>🔒</span>
-              )}
-            </div>
-          )
-        ))}
+
+      {/* Menu */}
+      <nav className="flex-1 px-4">
+        <ul className="space-y-2">
+          {getMenuItems().map((item) => (
+            item.label === 'scoring' ? (
+              <li key={item.label}>
+                <button
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group
+                    ${currentPage === item.label
+                      ? 'bg-[#00FF94] text-white font-semibold shadow-lg'
+                      : 'text-white hover:bg-[#00FF94] hover:text-white'
+                    }
+                    ${activeTab === item.label ? 'border-2 border-[#00FF94]' : 'border-2 border-transparent'}
+                  `}
+                  onClick={() => setScoringOpen((v) => !v)}
+                >
+                  <span className={`text-xl transition-colors duration-200
+                    ${currentPage === item.label
+                      ? 'text-white'
+                      : 'group-hover:text-white'
+                    }
+                  `}>
+                    {item.icon}
+                  </span>
+                  <span className="font-medium">{item.display}</span>
+                  <span className="ml-auto text-[#00FF94]">{scoringOpen ? '▾' : '▸'}</span>
+                </button>
+                {scoringOpen && (
+                  <div className="ml-8 mt-1 space-y-1">
+                    {item.sub.map((sub) => (
+                      <button
+                        key={sub.label}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-150 text-[#00FF94] font-medium hover:bg-[#23272F] 
+                          ${currentPage === sub.label ? 'bg-[#23272F] border-l-4 border-[#00FF94]' : ''}
+                          ${activeTab === sub.label ? 'border-2 border-[#00FF94]' : 'border-2 border-transparent'}
+                        `}
+                        onClick={() => {
+                          setCurrentPage(sub.label);
+                          setActiveTab(sub.label);
+                        }}
+                      >
+                        <span className="text-lg">{sub.icon}</span>
+                        <span>{sub.display}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </li>
+            ) : (
+              <li key={item.label}>
+                <button
+                  onClick={() => {
+                    setCurrentPage(item.label);
+                    setActiveTab(item.label);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 group
+                    ${currentPage === item.label
+                      ? 'bg-[#181A20] text-[#00FF94] font-semibold shadow-lg border-2 border-[#00FF94]'
+                      : 'bg-[#181A20] text-white border-2 border-transparent hover:bg-[#00FF94] hover:text-white'
+                    }
+                  `}
+                >
+                  <span className={`text-xl transition-colors duration-200
+                    ${currentPage === item.label
+                      ? 'text-[#00FF94]'
+                      : 'text-white group-hover:text-white'
+                    }
+                  `}>
+                    {item.icon}
+                  </span>
+                  <span className="font-medium">{item.display}</span>
+                  {item.label === 'settings' && user?.is_superadmin && (
+                    <span className="ml-auto text-[#00FF94]">🔒</span>
+                  )}
+                </button>
+              </li>
+            )
+          ))}
+        </ul>
       </nav>
+
+      {/* Footer */}
+      <div className="mt-auto mb-6 px-6 text-center text-xs text-[#b0b8c1] opacity-70">
+        &copy; {new Date().getFullYear()} ZmartTrading. All rights reserved.
+      </div>
     </aside>
   );
 } 

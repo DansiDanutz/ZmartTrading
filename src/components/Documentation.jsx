@@ -7,6 +7,7 @@ const roadmapData = [
     date: '6/23/2035',
     title: 'Project Foundation',
     status: 'completed',
+    icon: '🚀',
     details: [
       '🚀 Project bootstrapped with React, Vite, and Tailwind CSS',
       '🔐 Secure API key manager with password hashing and encryption',
@@ -26,6 +27,7 @@ const roadmapData = [
     date: today,
     title: 'V2 - Admin Management & Security',
     status: 'completed',
+    icon: '👥',
     details: [
       '👥 Complete Admin Management System',
       '   • SuperAdmin can create, confirm, and delete admin users',
@@ -67,8 +69,9 @@ const roadmapData = [
 ];
 
 const menu = [
-  { label: 'Roadmap' },
-  // Add more tabs here as needed
+  { label: 'Roadmap', icon: '🚂' },
+  { label: 'API Documentation', icon: '📚' },
+  { label: 'System Architecture', icon: '🏗️' }
 ];
 
 export default function Documentation() {
@@ -80,134 +83,319 @@ export default function Documentation() {
   };
 
   return (
-    <div className="w-full">
-      {/* Horizontal menu */}
-      <div className="flex border-b border-border mb-6">
-        {menu.map(tab => (
-          <button
-            key={tab.label}
-            className={`px-6 py-3 font-semibold text-lg focus:outline-none transition border-b-2 ${activeTab === tab.label ? 'border-neon-green text-neon-green' : 'border-transparent text-muted-foreground hover:text-neon-green'}`}
-            onClick={() => setActiveTab(tab.label)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-      
-      {/* Tab content */}
-      {activeTab === 'Roadmap' && (
-        <div className="space-y-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold mb-2 text-neon-green">🚂 ZmartTrading Development Journey</h2>
-            <p className="text-muted-foreground text-lg">Track our progress through the development timeline</p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Documentation Center</h1>
+            <p className="text-gray-300">Comprehensive guides and project documentation</p>
           </div>
-
-          {/* Train Timeline */}
-          <div className="relative">
-            {/* Train Track */}
-            <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-neon-green via-neon-green to-gray-600"></div>
-            
-            {/* Timeline Cards */}
-            <div className="space-y-6">
-              {roadmapData.map((milestone, index) => (
-                <div key={index} className="relative">
-                  {/* Train Station */}
-                  <div className="absolute left-6 top-6 w-4 h-4 bg-neon-green rounded-full border-4 border-background shadow-lg z-10"></div>
-                  
-                  {/* Card */}
-                  <div className={`ml-16 transition-all duration-300 ease-in-out ${
-                    expandedCard === index ? 'transform scale-105' : 'hover:transform hover:scale-102'
-                  }`}>
-                    <div 
-                      className={`bg-card border border-border rounded-lg p-6 cursor-pointer transition-all duration-300 hover:shadow-lg hover:border-neon-green/50 ${
-                        expandedCard === index ? 'shadow-xl border-neon-green' : ''
-                      }`}
-                      onClick={() => toggleCard(index)}
-                    >
-                      {/* Card Header */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-4">
-                          <div className={`w-3 h-3 rounded-full ${
-                            milestone.status === 'completed' ? 'bg-green-500' : 
-                            milestone.status === 'in-progress' ? 'bg-yellow-500' : 'bg-gray-500'
-                          }`}></div>
-                          <div>
-                            <h3 className="text-xl font-bold text-foreground">{milestone.title}</h3>
-                            <p className="text-sm text-muted-foreground">{milestone.date}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            milestone.status === 'completed' ? 'bg-green-500/20 text-green-400' : 
-                            milestone.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'
-                          }`}>
-                            {milestone.status === 'completed' ? '✅ Completed' : 
-                             milestone.status === 'in-progress' ? '🔄 In Progress' : '⏳ Planned'}
-                          </span>
-                          <button className="text-muted-foreground hover:text-neon-green transition-colors">
-                            {expandedCard === index ? '▼' : '▶'}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Card Content */}
-                      {expandedCard === index && (
-                        <div className="mt-4 pt-4 border-t border-border">
-                          <div className="space-y-3">
-                            {milestone.details.map((detail, detailIndex) => (
-                              <div key={detailIndex} className="flex items-start space-x-3">
-                                {detail.startsWith('   •') ? (
-                                  <>
-                                    <span className="text-muted-foreground mt-1">└─</span>
-                                    <span className="text-foreground">{detail.substring(4)}</span>
-                                  </>
-                                ) : detail === '' ? (
-                                  <div className="h-2"></div>
-                                ) : (
-                                  <>
-                                    <span className="text-neon-green mt-1">•</span>
-                                    <span className="text-foreground font-medium">{detail}</span>
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* End of Track */}
-            <div className="ml-16 mt-8">
-              <div className="flex items-center space-x-4">
-                <div className="w-4 h-4 bg-gray-600 rounded-full border-4 border-background"></div>
-                <div className="text-muted-foreground italic">More milestones coming soon...</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Stats */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-card border border-border rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold text-neon-green mb-2">{roadmapData.length}</div>
-              <div className="text-muted-foreground">Milestones Completed</div>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold text-green-500 mb-2">
-                {roadmapData.filter(m => m.status === 'completed').length}
-              </div>
-              <div className="text-muted-foreground">Successfully Delivered</div>
-            </div>
-            <div className="bg-card border border-border rounded-lg p-6 text-center">
-              <div className="text-3xl font-bold text-blue-500 mb-2">V2</div>
-              <div className="text-muted-foreground">Current Version</div>
-            </div>
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+            <span className="text-white font-semibold text-lg">📖</span>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+        <div className="flex border-b border-white/10">
+          {menu.map((tab) => (
+            <button
+              key={tab.label}
+              onClick={() => setActiveTab(tab.label)}
+              className={`flex-1 px-6 py-4 text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
+                activeTab === tab.label
+                  ? 'bg-blue-600/20 text-blue-400 border-b-2 border-blue-400'
+                  : 'text-gray-400 hover:text-gray-300 hover:bg-white/5'
+              }`}
+            >
+              <span className="text-lg">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-6">
+          {/* Roadmap Tab */}
+          {activeTab === 'Roadmap' && (
+            <div className="space-y-8">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold mb-2 text-white">🚂 ZmartTrading Development Journey</h2>
+                <p className="text-gray-300 text-lg">Track our progress through the development timeline</p>
+              </div>
+
+              {/* Timeline */}
+              <div className="relative">
+                {/* Timeline Track */}
+                <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-purple-500 to-gray-600"></div>
+                
+                {/* Timeline Cards */}
+                <div className="space-y-6">
+                  {roadmapData.map((milestone, index) => (
+                    <div key={index} className="relative">
+                      {/* Timeline Dot */}
+                      <div className="absolute left-6 top-6 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-4 border-gray-900 shadow-lg z-10"></div>
+                      
+                      {/* Card */}
+                      <div className={`ml-16 transition-all duration-300 ease-in-out ${
+                        expandedCard === index ? 'transform scale-105' : 'hover:transform hover:scale-102'
+                      }`}>
+                        <div 
+                          className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-blue-500/30 ${
+                            expandedCard === index ? 'shadow-2xl border-blue-500/50 bg-white/10' : ''
+                          }`}
+                          onClick={() => toggleCard(index)}
+                        >
+                          {/* Card Header */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center space-x-4">
+                              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                                <span className="text-2xl">{milestone.icon}</span>
+                              </div>
+                              <div>
+                                <h3 className="text-xl font-bold text-white">{milestone.title}</h3>
+                                <p className="text-sm text-gray-400">{milestone.date}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                milestone.status === 'completed' ? 'bg-green-500/20 text-green-400' : 
+                                milestone.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'
+                              }`}>
+                                {milestone.status === 'completed' ? '✅ Completed' : 
+                                 milestone.status === 'in-progress' ? '🔄 In Progress' : '⏳ Planned'}
+                              </span>
+                              <button className="text-gray-400 hover:text-blue-400 transition-colors">
+                                {expandedCard === index ? '▼' : '▶'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Card Content */}
+                          {expandedCard === index && (
+                            <div className="mt-6 pt-6 border-t border-white/10">
+                              <div className="space-y-3">
+                                {milestone.details.map((detail, detailIndex) => (
+                                  <div key={detailIndex} className="flex items-start space-x-3">
+                                    {detail.startsWith('   •') ? (
+                                      <>
+                                        <span className="text-gray-500 mt-1">└─</span>
+                                        <span className="text-gray-300">{detail.substring(4)}</span>
+                                      </>
+                                    ) : detail === '' ? (
+                                      <div className="h-2"></div>
+                                    ) : (
+                                      <>
+                                        <span className="text-blue-400 mt-1">•</span>
+                                        <span className="text-white font-medium">{detail}</span>
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* End of Timeline */}
+                <div className="ml-16 mt-8">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-4 h-4 bg-gray-600 rounded-full border-4 border-gray-900"></div>
+                    <div className="text-gray-400 italic">More milestones coming soon...</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary Stats */}
+              <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-white mb-2">{roadmapData.length}</div>
+                  <div className="text-gray-300">Milestones Completed</div>
+                </div>
+                <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-green-400 mb-2">
+                    {roadmapData.filter(m => m.status === 'completed').length}
+                  </div>
+                  <div className="text-gray-300">Successfully Delivered</div>
+                </div>
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/10">
+                  <div className="text-3xl font-bold text-purple-400 mb-2">100%</div>
+                  <div className="text-gray-300">On Track</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* API Documentation Tab */}
+          {activeTab === 'API Documentation' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl p-6 border border-white/10">
+                <h3 className="text-xl font-semibold text-white mb-4">API Integration Guide</h3>
+                <p className="text-gray-300 mb-6">
+                  Learn how to integrate with our trading bot APIs and manage your API keys securely.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* KuCoin API */}
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-semibold">₿</span>
+                    </div>
+                    <h4 className="text-lg font-semibold text-white">KuCoin Futures API</h4>
+                  </div>
+                  <div className="space-y-3 text-gray-300">
+                    <p>• Real-time price data for futures trading</p>
+                    <p>• Secure API key management</p>
+                    <p>• Automatic rate limiting and error handling</p>
+                    <p>• Support for multiple trading pairs</p>
+                  </div>
+                </div>
+
+                {/* Cryptometer API */}
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-semibold">📊</span>
+                    </div>
+                    <h4 className="text-lg font-semibold text-white">Cryptometer API</h4>
+                  </div>
+                  <div className="space-y-3 text-gray-300">
+                    <p>• Market sentiment analysis</p>
+                    <p>• Risk assessment metrics</p>
+                    <p>• Historical data analysis</p>
+                    <p>• 17+ endpoints for comprehensive data</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* API Key Management */}
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                <h4 className="text-lg font-semibold text-white mb-4">API Key Management</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h5 className="text-white font-medium mb-2">Security Features</h5>
+                    <ul className="space-y-2 text-gray-300">
+                      <li>• AES-256 encryption for all stored keys</li>
+                      <li>• Automatic key rotation support</li>
+                      <li>• Role-based access control</li>
+                      <li>• Audit logging for all operations</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h5 className="text-white font-medium mb-2">Best Practices</h5>
+                    <ul className="space-y-2 text-gray-300">
+                      <li>• Never share API keys publicly</li>
+                      <li>• Use read-only keys when possible</li>
+                      <li>• Regularly rotate your keys</li>
+                      <li>• Monitor API usage and limits</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* System Architecture Tab */}
+          {activeTab === 'System Architecture' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl p-6 border border-white/10">
+                <h3 className="text-xl font-semibold text-white mb-4">System Overview</h3>
+                <p className="text-gray-300 mb-6">
+                  Understanding the architecture and components of the ZmartTrading system.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Frontend */}
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-semibold">⚛️</span>
+                    </div>
+                    <h4 className="text-lg font-semibold text-white">Frontend</h4>
+                  </div>
+                  <div className="space-y-3 text-gray-300">
+                    <p>• React 18 with Vite</p>
+                    <p>• Tailwind CSS for styling</p>
+                    <p>• Axios for API communication</p>
+                    <p>• Responsive design</p>
+                  </div>
+                </div>
+
+                {/* Backend */}
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-semibold">🐍</span>
+                    </div>
+                    <h4 className="text-lg font-semibold text-white">Backend</h4>
+                  </div>
+                  <div className="space-y-3 text-gray-300">
+                    <p>• Flask web framework</p>
+                    <p>• SQLite database</p>
+                    <p>• JWT authentication</p>
+                    <p>• CORS enabled</p>
+                  </div>
+                </div>
+
+                {/* External APIs */}
+                <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-semibold">🌐</span>
+                    </div>
+                    <h4 className="text-lg font-semibold text-white">External APIs</h4>
+                  </div>
+                  <div className="space-y-3 text-gray-300">
+                    <p>• KuCoin Futures API</p>
+                    <p>• Cryptometer API</p>
+                    <p>• Email services</p>
+                    <p>• Real-time data feeds</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Flow */}
+              <div className="bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+                <h4 className="text-lg font-semibold text-white mb-4">Data Flow Architecture</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">1</span>
+                    </div>
+                    <span className="text-gray-300">User authentication and session management</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">2</span>
+                    </div>
+                    <span className="text-gray-300">API key management and encryption</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">3</span>
+                    </div>
+                    <span className="text-gray-300">External API integration and data fetching</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm">4</span>
+                    </div>
+                    <span className="text-gray-300">Real-time data processing and display</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 } 

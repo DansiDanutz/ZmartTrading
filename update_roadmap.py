@@ -12,7 +12,7 @@ import subprocess
 
 def get_current_date():
     """Get current date in the format used in the Roadmap"""
-    return datetime.now().strftime("%m/%d/%Y")
+    return datetime.now().strftime("%Y-%m-%d")
 
 def get_git_changes():
     """Get list of changes since last commit for the milestone description"""
@@ -76,7 +76,7 @@ def generate_milestone_description(version, changes):
     return " & ".join(description_parts)
 
 def update_roadmap_component(version, description):
-    """Update the Roadmap component with new milestone"""
+    """Update the Roadmap component with new version card"""
     roadmap_file = "src/components/Roadmap.jsx"
     
     if not os.path.exists(roadmap_file):
@@ -87,52 +87,48 @@ def update_roadmap_component(version, description):
     with open(roadmap_file, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # Find the milestones array
-    milestones_pattern = r'const milestones = \[(.*?)\];'
-    match = re.search(milestones_pattern, re.DOTALL)
+    # Find the achievements array in roadmapData
+    achievements_pattern = r'achievements: \[(.*?)\]'
+    match = re.search(achievements_pattern, content, re.DOTALL)
     
     if not match:
-        print("Error: Could not find milestones array in Roadmap component")
+        print("Error: Could not find achievements array in Roadmap component")
         return False
     
-    current_milestones = match.group(1)
+    current_achievements = match.group(1)
     
-    # Create new milestone entry
-    current_date = get_current_date()
-    new_milestone = f'''
-    {{
-        id: {len(re.findall(r'id:', current_milestones)) + 1},
-        date: "{current_date}",
-        title: "Version {version}",
-        description: "{description}",
-        status: "completed",
-        achievements: [
-            "Enhanced system functionality",
-            "Improved user experience", 
-            "Bug fixes and optimizations"
-        ]
-    }}'''
+    # Create new version achievement entry
+    new_achievement = f'            "✅ Version {version} - {description}"'
     
-    # Insert new milestone at the beginning (after the opening bracket)
-    updated_milestones = current_milestones.strip()
-    if updated_milestones:
-        updated_milestones = new_milestone + ",\n    " + updated_milestones
+    # Insert new achievement at the beginning (after the opening bracket)
+    updated_achievements = current_achievements.strip()
+    if updated_achievements:
+        updated_achievements = new_achievement + ",\n" + updated_achievements
     else:
-        updated_milestones = new_milestone
+        updated_achievements = new_achievement
     
-    # Replace the milestones array
+    # Replace the achievements array
     new_content = re.sub(
-        milestones_pattern,
-        f'const milestones = [{updated_milestones}];',
+        achievements_pattern,
+        f'achievements: [{updated_achievements}]',
         content,
         flags=re.DOTALL
+    )
+    
+    # Update the date
+    current_date = get_current_date()
+    date_pattern = r'date: \'[^\']*\''
+    new_content = re.sub(
+        date_pattern,
+        f"date: '{current_date}'",
+        new_content
     )
     
     # Write updated content
     with open(roadmap_file, 'w', encoding='utf-8') as f:
         f.write(new_content)
     
-    print(f"✅ Successfully added Version {version} milestone to Roadmap")
+    print(f"✅ Successfully added Version {version} card to Roadmap")
     return True
 
 def commit_to_git(version, description):
@@ -169,7 +165,10 @@ def main():
         print("Error: Version must be in format V3, V4, V5, etc.")
         sys.exit(1)
     
-    print(f"🚀 Preparing Version {version} release...")
+    print("========================================")
+    print("    ZMARTTRADING VERSION SAVER")
+    print("========================================")
+    print(f"🚀 Saving Version {version}...")
     
     # Get changes for description
     changes = get_git_changes()
@@ -187,7 +186,7 @@ def main():
     # Commit to Git
     if commit_to_git(version, description):
         print(f"🎉 Version {version} successfully released!")
-        print(f"📊 Roadmap updated with new milestone")
+        print(f"📊 Roadmap updated with new version card")
         print(f"🏷️  Git tag v{version} created and pushed")
     else:
         print("❌ Failed to commit to Git")

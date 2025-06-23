@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "prettier --write .",
+    "backend": "cd backend && python3 app.py",
+    "start": "concurrently \"npm run dev\" \"npm run backend\"",
+    "test": "pytest backend/",
+    "test:frontend": "npm run lint",
+    "setup": "npm install && cd backend && pip3 install -r requirements.txt"
   },
   "dependencies": {
     "@emotion/react": "^11.11.3",
@@ -33,10 +39,13 @@
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.17",
-    "eslint": "^8.56.0",
+    "concurrently": "^9.2.0",
+    "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "nodemon": "^3.1.10",
     "postcss": "^8.4.35",
+    "prettier": "^3.6.0",
     "tailwindcss": "^3.4.1",
     "vite": "^5.4.19"
   }

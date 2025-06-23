@@ -49,7 +49,9 @@ CORS(app,
      allow_headers=['Content-Type', 'Authorization'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///zmarttrading.db'
+# Database configuration with absolute path
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zmarttrading.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -992,6 +994,205 @@ def confirm_admin_reset():
     session.pop('admin_reset_code', None)
     return jsonify({'message': 'Admin password reset'})
 
+@app.route('/api/kucoin/contracts', methods=['GET'])
+@login_required
+def get_kucoin_contracts():
+    """Get all available KuCoin futures contracts"""
+    try:
+        # Get user's API keys
+        user = User.query.get(session['user_id'])
+        api_key = APIKey.query.filter_by(user_id=user.id, name='KuCoin').first()
+        if not api_key:
+            return jsonify({'error': 'KuCoin API key not found'}), 404
+
+        # Decrypt API credentials
+        key = decrypt(api_key.key_enc)
+        secret = decrypt(api_key.secret_enc)
+        passphrase = decrypt(api_key.passphrase_enc)
+
+        # Make request to KuCoin API
+        url = 'https://api-futures.kucoin.com/api/v1/contracts/active'
+        headers = {
+            'KC-API-KEY': key,
+            'KC-API-SECRET': secret,
+            'KC-API-PASSPHRASE': passphrase,
+            'KC-API-TIMESTAMP': str(int(time.time() * 1000))
+        }
+        
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch contracts from KuCoin', 'status': response.status_code}), response.status_code
+        
+        data = response.json()
+        if 'data' not in data:
+            return jsonify({'error': 'Unexpected KuCoin response'}), 500
+            
+        return jsonify({
+            'contracts': data['data'],
+            'count': len(data['data'])
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/kucoin/funding-rate/<symbol>', methods=['GET'])
+@login_required
+def get_kucoin_funding_rate(symbol):
+    """Get funding rate for a specific symbol"""
+    try:
+        # Get user's API keys
+        user = User.query.get(session['user_id'])
+        api_key = APIKey.query.filter_by(user_id=user.id, name='KuCoin').first()
+        if not api_key:
+            return jsonify({'error': 'KuCoin API key not found'}), 404
+
+        # Decrypt API credentials
+        key = decrypt(api_key.key_enc)
+        secret = decrypt(api_key.secret_enc)
+        passphrase = decrypt(api_key.passphrase_enc)
+
+        # Make request to KuCoin API
+        url = f'https://api-futures.kucoin.com/api/v1/contracts/{symbol}/funding-rate'
+        headers = {
+            'KC-API-KEY': key,
+            'KC-API-SECRET': secret,
+            'KC-API-PASSPHRASE': passphrase,
+            'KC-API-TIMESTAMP': str(int(time.time() * 1000))
+        }
+        
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch funding rate from KuCoin', 'status': response.status_code}), response.status_code
+        
+        data = response.json()
+        if 'data' not in data:
+            return jsonify({'error': 'Unexpected KuCoin response'}), 500
+            
+        return jsonify({
+            'symbol': symbol,
+            'funding_rate': data['data']
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/kucoin/funding-rates', methods=['GET'])
+@login_required
+def get_kucoin_funding_rates():
+    """Get funding rates for all active contracts"""
+    try:
+        # Get user's API keys
+        user = User.query.get(session['user_id'])
+        api_key = APIKey.query.filter_by(user_id=user.id, name='KuCoin').first()
+        if not api_key:
+            return jsonify({'error': 'KuCoin API key not found'}), 404
+
+        # Decrypt API credentials
+        key = decrypt(api_key.key_enc)
+        secret = decrypt(api_key.secret_enc)
+        passphrase = decrypt(api_key.passphrase_enc)
+
+        # First get all active contracts
+        contracts_url = 'https://api-futures.kucoin.com/api/v1/contracts/active'
+        headers = {
+            'KC-API-KEY': key,
+            'KC-API-SECRET': secret,
+            'KC-API-PASSPHRASE': passphrase,
+            'KC-API-TIMESTAMP': str(int(time.time() * 1000))
+        }
+        
+        contracts_response = requests.get(contracts_url, headers=headers)
+        if contracts_response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch contracts from KuCoin', 'status': contracts_response.status_code}), contracts_response.status_code
+        
+        contracts_data = contracts_response.json()
+        if 'data' not in contracts_data:
+            return jsonify({'error': 'Unexpected KuCoin response'}), 500
+        
+        # Get funding rates for each contract
+        funding_rates = []
+        for contract in contracts_data['data']:
+            symbol = contract['symbol']
+            try:
+                # Get funding rate for this symbol
+                funding_url = f'https://api-futures.kucoin.com/api/v1/contracts/{symbol}/funding-rate'
+                funding_response = requests.get(funding_url, headers=headers)
+                
+                if funding_response.status_code == 200:
+                    funding_data = funding_response.json()
+                    if 'data' in funding_data:
+                        funding_rates.append({
+                            'symbol': symbol,
+                            'funding_rate': funding_data['data'].get('fundingRate', 0),
+                            'next_funding_time': funding_data['data'].get('nextFundingTime'),
+                            'mark_price': contract.get('markPrice'),
+                            'index_price': contract.get('indexPrice'),
+                            'price_change_24h': contract.get('priceChgPct', 0)
+                        })
+            except Exception as e:
+                # Continue with other symbols if one fails
+                continue
+        
+        return jsonify({
+            'funding_rates': funding_rates,
+            'total_count': len(funding_rates)
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/kucoin/market-stats', methods=['GET'])
+@login_required
+def get_kucoin_market_stats():
+    """Get overall market statistics"""
+    try:
+        # Get user's API keys
+        user = User.query.get(session['user_id'])
+        api_key = APIKey.query.filter_by(user_id=user.id, name='KuCoin').first()
+        if not api_key:
+            return jsonify({'error': 'KuCoin API key not found'}), 404
+
+        # Decrypt API credentials
+        key = decrypt(api_key.key_enc)
+        secret = decrypt(api_key.secret_enc)
+        passphrase = decrypt(api_key.passphrase_enc)
+
+        # Make request to KuCoin API
+        url = 'https://api-futures.kucoin.com/api/v1/contracts/active'
+        headers = {
+            'KC-API-KEY': key,
+            'KC-API-SECRET': secret,
+            'KC-API-PASSPHRASE': passphrase,
+            'KC-API-TIMESTAMP': str(int(time.time() * 1000))
+        }
+        
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to fetch market stats from KuCoin', 'status': response.status_code}), response.status_code
+        
+        data = response.json()
+        if 'data' not in data:
+            return jsonify({'error': 'Unexpected KuCoin response'}), 500
+        
+        # Calculate market statistics
+        contracts = data['data']
+        total_volume = sum(float(contract.get('volumeOf24h', 0)) for contract in contracts)
+        total_turnover = sum(float(contract.get('turnoverOf24h', 0)) for contract in contracts)
+        total_open_interest = sum(float(contract.get('openInterest', 0)) for contract in contracts)
+        
+        # Get top gainers and losers
+        sorted_contracts = sorted(contracts, key=lambda x: float(x.get('priceChgPct', 0)), reverse=True)
+        top_gainers = sorted_contracts[:5]
+        top_losers = sorted_contracts[-5:]
+        
+        return jsonify({
+            'total_contracts': len(contracts),
+            'total_volume_24h': total_volume,
+            'total_turnover_24h': total_turnover,
+            'total_open_interest': total_open_interest,
+            'top_gainers': top_gainers,
+            'top_losers': top_losers
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/kucoin/price/<symbol>', methods=['GET'])
 @login_required
 def get_kucoin_price(symbol):
@@ -1030,11 +1231,26 @@ def get_kucoin_price(symbol):
         print('Parsed JSON:', data)
         if 'data' not in data or 'lastTradePrice' not in data['data']:
             return jsonify({'error': 'Unexpected KuCoin response', 'data': data}), 500
+        
+        # Return comprehensive data
+        contract_data = data['data']
         return jsonify({
             'symbol': symbol,
-            'price': data['data']['lastTradePrice'],
-            'timestamp': data['data'].get('timestamp', None),
-            'raw': data['data']
+            'price': contract_data['lastTradePrice'],
+            'mark_price': contract_data.get('markPrice'),
+            'index_price': contract_data.get('indexPrice'),
+            'high_24h': contract_data.get('highPrice'),
+            'low_24h': contract_data.get('lowPrice'),
+            'volume_24h': contract_data.get('volumeOf24h'),
+            'turnover_24h': contract_data.get('turnoverOf24h'),
+            'open_interest': contract_data.get('openInterest'),
+            'price_change_24h': contract_data.get('priceChg'),
+            'price_change_pct_24h': contract_data.get('priceChgPct'),
+            'funding_rate': contract_data.get('fundingFeeRate'),
+            'max_leverage': contract_data.get('maxLeverage'),
+            'status': contract_data.get('status'),
+            'timestamp': contract_data.get('timestamp', None),
+            'raw': contract_data
         })
     except Exception as e:
         import traceback
@@ -1097,4 +1313,4 @@ def get_roadmap():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True, port=5000) 
+    app.run(debug=True, port=5001) 

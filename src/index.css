@@ -5,9 +5,9 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background: #0a0d0f;
-  color: #fff;
+body, html, #root {
+  background: #101214 !important;
+  color: #fff !important;
   font-family: 'Inter', 'Poppins', sans-serif;
   margin: 0;
   min-width: 320px;
@@ -201,4 +201,56 @@ body {
 .metric-sub {
   font-size: 1.1rem;
   color: #aaa;
+}
+
+.bg-card, .card, .rounded-2xl, .rounded-xl, .rounded-lg {
+  background: #181A20 !important;
+  border: 1px solid #23272F !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.text-green-accent, .text-success, .text-bullish, .text-green-400 {
+  color: #00FF94 !important;
+}
+
+.bg-green-accent, .bg-success, .bg-green-400 {
+  background: #00FF94 !important;
+}
+
+.text-gray-400, .text-gray-300, .text-gray-500 {
+  color: #b0b8c1 !important;
+}
+
+.border-green-accent, .border-green-400 {
+  border-color: #00FF94 !important;
+}
+
+/* Override sidebar hover styles for the new design */
+.sidebar-menu-item:hover {
+  background: #00FF94 !important;
+  color: white !important;
+}
+
+/* Specific rules for the new sidebar buttons */
+aside nav ul li button:hover {
+  background-color: #00FF94 !important;
+  color: white !important;
+}
+
+aside nav ul li button.active {
+  background-color: #00FF94 !important;
+  color: white !important;
+}
+
+/* Ensure hover effects work on all menu items */
+aside nav ul li button:not(.active):hover {
+  background-color: #00FF94 !important;
+  color: white !important;
+}
+
+/* Override any existing hover styles */
+.sidebar-menu-item.active, .sidebar-menu-item:hover {
+  background: #00FF94 !important;
+  color: white !important;
 } 

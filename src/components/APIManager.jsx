@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import GlassCard from './GlassCard';
 
 export default function APIManager() {
   const [apiKeys, setApiKeys] = useState([]);
@@ -15,11 +14,10 @@ export default function APIManager() {
     passphrase: ''
   });
   const [editingKey, setEditingKey] = useState(null);
-  const [fullKeyData, setFullKeyData] = useState({}); // Store full key data for SuperAdmin
+  const [fullKeyData, setFullKeyData] = useState({});
 
-  // Configure axios to include credentials
   const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'http://localhost:5001/api',
     withCredentials: true
   });
 
@@ -85,7 +83,6 @@ export default function APIManager() {
       setNewKey({ name: '', key: '', secret: '', passphrase: '' });
       setShowAddForm(false);
       setError('');
-      // Reload the list to get the updated data
       await loadAPIKeys();
     } catch (err) {
       console.error('Error adding API key:', err);
@@ -114,7 +111,6 @@ export default function APIManager() {
       await api.put(`/apikeys/${editingKey.id}`, editingKey);
       setEditingKey(null);
       setError('');
-      // Reload the list to get the updated data
       await loadAPIKeys();
     } catch (err) {
       console.error('Error updating API key:', err);
@@ -139,38 +135,42 @@ export default function APIManager() {
     if (userRole?.isSuperAdmin && fullKeyData[key.id]) {
       return fullKeyData[key.id].key;
     }
-    return key.key; // This is already masked from backend
+    return key.key;
   };
 
   if (loading) {
     return (
-      <GlassCard className="p-6">
+      <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
-          <p className="mt-2">Loading API keys...</p>
+          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading API keys...</p>
         </div>
-      </GlassCard>
+      </div>
     );
   }
 
   if (error && error.includes('log in')) {
     return (
-      <GlassCard className="p-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">API Key Manager</h2>
-          <p className="text-red-500 mb-4">{error}</p>
-          <p className="text-gray-400">Please log in to access the API Key Manager.</p>
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 text-center">
+        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
         </div>
-      </GlassCard>
+        <h2 className="text-2xl font-bold text-white mb-4">API Key Manager</h2>
+        <p className="text-red-400 mb-4">{error}</p>
+        <p className="text-gray-400">Please log in to access the API Key Manager.</p>
+      </div>
     );
   }
 
   return (
-    <GlassCard className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">API Key Manager</h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <h2 className="text-2xl font-bold text-white">API Key Manager</h2>
+          <p className="text-gray-400 mt-1">
             {userRole?.isSuperAdmin ? 'SuperAdmin - Full Access' : 
              userRole?.isAdmin ? 'Admin - View Only (Masked)' : 'User - No Access'}
           </p>
@@ -178,258 +178,225 @@ export default function APIManager() {
         {userRole?.isSuperAdmin && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+            className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2"
           >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
             {showAddForm ? 'Cancel' : 'Add API Key'}
           </button>
         )}
       </div>
 
-      {/* Add New API Key Form - SuperAdmin Only */}
-      {showAddForm && userRole?.isSuperAdmin && (
-        <form onSubmit={handleAddKey} className="mb-8 p-4 bg-black/20 rounded border border-white/10">
-          <h3 className="text-lg font-semibold mb-4">Add New API Key</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Name *</label>
-              <input
-                type="text"
-                value={newKey.name}
-                onChange={(e) => setNewKey({ ...newKey, name: e.target.value })}
-                className="w-full p-2 rounded bg-black/20 border border-white/10"
-                placeholder="e.g., KuCoin, Cryptometer"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">API Key *</label>
-              <input
-                type="text"
-                value={newKey.key}
-                onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
-                className="w-full p-2 rounded bg-black/20 border border-white/10"
-                placeholder="Your API key"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Secret Key</label>
-              <input
-                type="password"
-                value={newKey.secret}
-                onChange={(e) => setNewKey({ ...newKey, secret: e.target.value })}
-                className="w-full p-2 rounded bg-black/20 border border-white/10"
-                placeholder="Your secret key (optional)"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Passphrase</label>
-              <input
-                type="password"
-                value={newKey.passphrase}
-                onChange={(e) => setNewKey({ ...newKey, passphrase: e.target.value })}
-                className="w-full p-2 rounded bg-black/20 border border-white/10"
-                placeholder="Your passphrase (optional)"
-              />
-            </div>
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4 text-red-300">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            {error}
           </div>
-          <div className="flex gap-2 mt-4">
-            <button
-              type="submit"
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Add API Key
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAddForm(false)}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+        </div>
       )}
 
-      {/* API Keys List */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Stored API Keys</h3>
+      {/* Add New API Key Form - SuperAdmin Only */}
+      {showAddForm && userRole?.isSuperAdmin && (
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+          <h3 className="text-xl font-semibold text-white mb-6">Add New API Key</h3>
+          <form onSubmit={handleAddKey} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
+                <input
+                  type="text"
+                  value={newKey.name}
+                  onChange={(e) => setNewKey({ ...newKey, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., KuCoin, Cryptometer"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">API Key *</label>
+                <input
+                  type="text"
+                  value={newKey.key}
+                  onChange={(e) => setNewKey({ ...newKey, key: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter API key"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Secret *</label>
+                <input
+                  type="password"
+                  value={newKey.secret}
+                  onChange={(e) => setNewKey({ ...newKey, secret: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter secret key"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Passphrase</label>
+                <input
+                  type="password"
+                  value={newKey.passphrase}
+                  onChange={(e) => setNewKey({ ...newKey, passphrase: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter passphrase (optional)"
+                />
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200"
+              >
+                Add API Key
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 px-6 py-3 rounded-xl font-medium transition-all duration-200 border border-gray-500/20"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* API Keys Table */}
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+        <div className="p-6 border-b border-white/10">
+          <h3 className="text-xl font-semibold text-white">API Keys ({apiKeys.length})</h3>
+        </div>
+        
         {apiKeys.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <p>No API keys found.</p>
+          <div className="p-8 text-center">
+            <div className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            </div>
+            <p className="text-gray-400">No API keys found</p>
             {userRole?.isSuperAdmin && (
-              <p className="text-sm mt-2">Click "Add API Key" to get started.</p>
+              <p className="text-gray-500 text-sm mt-2">Click "Add API Key" to get started</p>
             )}
           </div>
         ) : (
-          apiKeys.map((key) => (
-            <div
-              key={key.id}
-              className="p-4 rounded bg-black/20 border border-white/10"
-            >
-              {editingKey?.id === key.id ? (
-                // Edit Form - Only for SuperAdmin
-                <form onSubmit={handleEditKey} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Name</label>
-                      <input
-                        type="text"
-                        value={editingKey.name}
-                        onChange={(e) => setEditingKey({ ...editingKey, name: e.target.value })}
-                        className="w-full p-2 rounded bg-black/20 border border-white/10"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">API Key</label>
-                      <input
-                        type="text"
-                        value={editingKey.key}
-                        onChange={(e) => setEditingKey({ ...editingKey, key: e.target.value })}
-                        className="w-full p-2 rounded bg-black/20 border border-white/10"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Secret Key</label>
-                      <input
-                        type="password"
-                        value={editingKey.secret || ''}
-                        onChange={(e) => setEditingKey({ ...editingKey, secret: e.target.value })}
-                        className="w-full p-2 rounded bg-black/20 border border-white/10"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Passphrase</label>
-                      <input
-                        type="password"
-                        value={editingKey.passphrase || ''}
-                        onChange={(e) => setEditingKey({ ...editingKey, passphrase: e.target.value })}
-                        className="w-full p-2 rounded bg-black/20 border border-white/10"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingKey(null)}
-                      className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                // Display Mode
-                <div>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-medium text-lg">{key.name}</h4>
-                        <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
-                          {key.has_secret ? 'With Secret' : 'Key Only'}
-                        </span>
-                        {key.has_passphrase && (
-                          <span className="text-xs bg-purple-500 text-white px-2 py-1 rounded">
-                            With Passphrase
-                          </span>
-                        )}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">API Key</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {apiKeys.map((key) => (
+                  <tr key={key.id} className="hover:bg-white/5 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                          <span className="text-white text-sm font-bold">🔑</span>
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{key.name}</p>
+                          <p className="text-gray-400 text-sm">ID: {key.id}</p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-400 mb-2">
-                        API Key: <span className="font-mono">{getDisplayKey(key)}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <code className="text-sm bg-white/10 px-2 py-1 rounded text-gray-300 font-mono">
+                          {getDisplayKey(key)}
+                        </code>
                         {userRole?.isSuperAdmin && !fullKeyData[key.id] && (
                           <button
                             onClick={() => handleViewFullKey(key.id)}
-                            className="ml-2 text-blue-400 hover:text-blue-300 text-xs"
-                          >
-                            (View Full)
-                          </button>
-                        )}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Created: {formatDate(key.created_at)}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      {userRole?.isSuperAdmin && (
-                        <>
-                          <button
-                            onClick={() => {
-                              // For editing, we need to get the full key data first
-                              if (!fullKeyData[key.id]) {
-                                loadFullKeyData(key.id).then(() => {
-                                  const fullData = fullKeyData[key.id];
-                                  setEditingKey({
-                                    id: key.id,
-                                    name: key.name,
-                                    key: fullData?.key || '',
-                                    secret: fullData?.secret || '',
-                                    passphrase: fullData?.passphrase || ''
-                                  });
-                                });
-                              } else {
-                                const fullData = fullKeyData[key.id];
-                                setEditingKey({
-                                  id: key.id,
-                                  name: key.name,
-                                  key: fullData?.key || '',
-                                  secret: fullData?.secret || '',
-                                  passphrase: fullData?.passphrase || ''
-                                });
-                              }
-                            }}
                             className="text-blue-400 hover:text-blue-300 text-sm"
                           >
-                            Edit
+                            View Full
                           </button>
-                          <button
-                            onClick={() => handleDeleteKey(key.id)}
-                            className="text-red-500 hover:text-red-400 text-sm"
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-gray-300">
+                      {formatDate(key.created_at)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {userRole?.isSuperAdmin && (
+                          <>
+                            <button
+                              onClick={() => setEditingKey(key)}
+                              className="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-blue-500/10 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteKey(key.id)}
+                              className="text-red-400 hover:text-red-300 p-2 rounded-lg hover:bg-red-500/10 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      {error && (
-        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded">
-          <p className="text-red-400 text-sm">{error}</p>
+      {/* Edit Modal */}
+      {editingKey && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-white mb-6">Edit API Key</h3>
+            <form onSubmit={handleEditKey} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Name</label>
+                <input
+                  type="text"
+                  value={editingKey.name}
+                  onChange={(e) => setEditingKey({ ...editingKey, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div className="flex gap-4">
+                <button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-3 rounded-xl font-medium transition-all duration-200"
+                >
+                  Update
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingKey(null)}
+                  className="flex-1 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 px-4 py-3 rounded-xl font-medium transition-all duration-200 border border-gray-500/20"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
-
-      {/* Permission Notice */}
-      {!userRole?.isSuperAdmin && userRole?.isAdmin && (
-        <div className="mt-6 p-4 bg-blue-500/20 border border-blue-500/30 rounded">
-          <p className="text-blue-300 text-sm">
-            <strong>View Only Mode:</strong> You can view API keys (masked) but cannot add, edit, or delete them. 
-            Only the SuperAdmin ({userRole?.email === 'seme@kryptostack.com' ? 'you' : 'seme@kryptostack.com'}) 
-            has full access to manage API keys.
-          </p>
-        </div>
-      )}
-
-      {/* Security Notice */}
-      <div className="mt-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded">
-        <p className="text-yellow-300 text-sm">
-          <strong>Security:</strong> API keys are encrypted in the database and never stored in plain text. 
-          Only SuperAdmin can view full keys. All keys are stored locally and never committed to version control.
-        </p>
-      </div>
-    </GlassCard>
+    </div>
   );
 } 
