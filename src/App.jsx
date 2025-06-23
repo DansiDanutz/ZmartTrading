@@ -6,6 +6,7 @@ import Settings from './components/Settings';
 import Login from './components/Login';
 import APIManager from './components/APIManager';
 import Symbols from './components/Symbols';
+import Roadmap from './components/Roadmap';
 import { ErrorBoundary } from 'react-error-boundary';
 import axios from 'axios';
 
@@ -94,7 +95,7 @@ export default function App() {
       case 'symbols':
         return <Symbols />;
       case 'roadmap':
-        return <Documentation />;
+        return <Roadmap />;
       case 'settings':
         return <Settings />;
       case 'api':

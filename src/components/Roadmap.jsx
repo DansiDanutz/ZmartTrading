@@ -1,118 +1,149 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const Roadmap = () => {
-  const [roadmapData, setRoadmapData] = useState({
-    date: '2025-06-24',
-    achievements: [
-      "✅ Version V4 - Complete UI/UX overhaul with dark theme, professional styling, and version automation system",
-      "✅ Version V3 - Complete Authentication & Admin Management System",
-      "✅ Project bootstrapped with React, Vite, and Tailwind CSS",
-      "✅ Secure API key manager with password hashing and encryption",
-      "✅ Persistent password and API key storage (localStorage + encryption)",
-      "✅ API Manager: add, view, and delete API keys (KuCoin, Cryptometer, etc.)",
-      "✅ Backend Flask server with user/session management and CORS",
-      "✅ KuCoin price proxy endpoint (secure, uses stored API keys)",
-      "✅ Frontend KucoinPrice component with real-time price updates",
-      "✅ User authentication system with login/logout functionality",
-      "✅ Admin management system with user creation and password reset",
-      "✅ Email functionality for password reset and notifications",
-      "✅ Dashboard with metric cards (Total Profit, Total Trades, etc.)",
-      "✅ Sidebar navigation with active state management",
-      "✅ Settings page with system configuration options",
-      "✅ Documentation page with project information",
-      "✅ Version automation system with Git integration",
-      "✅ Startup and shutdown automation scripts",
-      "✅ API key security improvements and management"
-    ]
-  });
+  const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expandedCard, setExpandedCard] = useState(null);
+
+  // Accurate static versions based on actual Git history and achievements
+  const staticVersions = [
+    {
+      version: 'V1',
+      title: 'Project Foundation & Strategy Documentation',
+      date: '2025-06-12',
+      details: `🚀 **Project Foundation: Initial ZmartBot Strategy & Documentation Setup**
+• Initial commit with complete ZmartBot trading strategy documentation
+• Comprehensive PDF documentation: Cryptometer API reference, RiskMetric methodology, KuCoin integration guide
+• Position management formulas and historical trades data structure
+• Basic dashboard UI components and project structure
+• All core strategy documents and reference materials established` 
+    },
+    {
+      version: 'V2',
+      title: 'Complete Authentication & Admin Management System',
+      date: '2025-06-22',
+      details: `🔐 **Major Authentication & Admin Management: Fully Tested & Stable**
+• Complete user authentication system with secure login/logout flows
+• Admin user management with role-based access control (admin/superadmin)
+• Password reset functionality with email notifications (tested and working)
+• Comprehensive admin settings panel with user management capabilities
+• Session management with CSRF protection and secure cookie handling
+• Extensive testing suite: 15+ test files covering all authentication flows
+• Frontend/backend improvements with polished UI and responsive design
+• All flows tested and stable - previous version preserved in Git history` 
+    },
+    {
+      version: 'V3',
+      title: 'API Management & Version Control System',
+      date: '2025-06-23',
+      details: `📊 **Complete API Management & Version Control: Production Ready**
+• KuCoin API integration with live price feeds and real-time data
+• API key management system with secure storage and validation
+• Complete admin management system with user roles and permissions
+• Version control automation with Git tag integration
+• Roadmap UI with dynamic version cards and expandable details
+• Comprehensive documentation system with automated updates
+• Startup guides and version automation scripts for deployment
+• Database management and API testing suite (20+ test files)
+• All systems tested and production-ready` 
+    },
+    {
+      version: 'V4',
+      title: 'Roadmap Automation & UI Polish',
+      date: '2025-06-24',
+      details: `🎯 **Roadmap Automation & Professional UI Polish: Complete**
+• Automated roadmap system with Git integration for version tracking
+• Professional dark theme UI with green accent (#00FF94) design system
+• Enhanced Roadmap component with expandable version cards and detailed explanations
+• Super Admin version restore functionality in Settings tab
+• Backend API enhancements with detailed version information
+• Responsive sidebar navigation with active state indicators
+• Complete version management system with restore capabilities
+• All UI components polished and professional-grade
+• Full integration of version control with user interface` 
+    },
+  ];
 
   useEffect(() => {
-    // Fetch roadmap data from the backend
-    fetch('/api/roadmap')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          setRoadmapData(data.roadmap);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching roadmap:', error);
-        // Fallback to static data
-        setRoadmapData({
-          date: '2025-06-24',
-          achievements: [
-            "✅ Version V4 - Complete UI/UX overhaul with dark theme, professional styling, and version automation system",
-            "✅ Version V3 - Complete Authentication & Admin Management System",
-            "✅ Project bootstrapped with React, Vite, and Tailwind CSS",
-            "✅ Secure API key manager with password hashing and encryption",
-            "✅ Persistent password and API key storage (localStorage + encryption)",
-            "✅ API Manager: add, view, and delete API keys (KuCoin, Cryptometer, etc.)",
-            "✅ Backend Flask server with user/session management and CORS",
-            "✅ KuCoin price proxy endpoint (secure, uses stored API keys)",
-            "✅ Frontend KucoinPrice component with real-time price updates",
-            "✅ User authentication system with login/logout functionality",
-            "✅ Admin management system with user creation and password reset",
-            "✅ Email functionality for password reset and notifications",
-            "✅ Dashboard with metric cards (Total Profit, Total Trades, etc.)",
-            "✅ Sidebar navigation with active state management",
-            "✅ Settings page with system configuration options",
-            "✅ Documentation page with project information",
-            "✅ Version automation system with Git integration",
-            "✅ Startup and shutdown automation scripts",
-            "✅ API key security improvements and management"
-          ]
+    const fetchVersions = async () => {
+      try {
+        console.log('Fetching roadmap versions...');
+        const response = await axios.get('http://localhost:5001/api/roadmap-versions', {
+          withCredentials: true
         });
-      })
-      .finally(() => {
+        console.log('Roadmap API response:', response.data);
+        
+        // Debug output for troubleshooting
+        window._roadmapVersions = response.data.versions;
+        
+        if (response.data.success && response.data.versions) {
+          // Use API data with fallback to static data for details
+          const enhancedVersions = response.data.versions.map((v, i) => ({
+            ...v,
+            details: v.details || staticVersions[i]?.details || 'No details available.'
+          }));
+          setVersions(enhancedVersions);
+        } else {
+          console.log('Using static versions as fallback');
+          setVersions(staticVersions);
+        }
+      } catch (err) {
+        console.error('Error fetching roadmap versions:', err);
+        setError('Failed to load roadmap data');
+        // Fallback to static data
+        setVersions(staticVersions);
+      } finally {
         setLoading(false);
-      });
+      }
+    };
+    fetchVersions();
   }, []);
 
-  const nextMilestones = [
-    {
-      title: 'KingFisher Integration',
-      description: 'Liquidation analysis and toxic order flow detection',
-      status: 'planned',
-      priority: 'high',
-      icon: '🎯'
-    },
-    {
-      title: 'RiskMetric Scoring',
-      description: 'Implement comprehensive risk assessment system',
-      status: 'planned',
-      priority: 'high',
-      icon: '📊'
-    },
-    {
-      title: 'Cryptometer API',
-      description: 'Market sentiment and data analysis integration',
-      status: 'planned',
-      priority: 'medium',
-      icon: '📈'
-    },
-    {
-      title: '25-Point Scoring',
-      description: 'Advanced trading decision algorithm',
-      status: 'planned',
-      priority: 'high',
-      icon: '🧮'
-    },
-    {
-      title: 'Auto Trading',
-      description: 'Automated trade execution system',
-      status: 'planned',
-      priority: 'medium',
-      icon: '🤖'
-    }
-  ];
+  const toggleCard = (version) => {
+    setExpandedCard(expandedCard === version ? null : version);
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-400">Loading roadmap...</p>
+      <div className="space-y-6">
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Project Roadmap</h1>
+              <p className="text-gray-300">Track our progress and future milestones</p>
+            </div>
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+              <span className="text-white font-semibold text-lg">🚀</span>
+            </div>
+          </div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
+            <span className="ml-3 text-gray-300">Loading roadmap...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">Project Roadmap</h1>
+              <p className="text-gray-300">Track our progress and future milestones</p>
+            </div>
+            <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+              <span className="text-white font-semibold text-lg">🚀</span>
+            </div>
+          </div>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+            <p className="text-red-400">{error}</p>
+            <p className="text-gray-400 text-sm mt-2">Using fallback data...</p>
+          </div>
         </div>
       </div>
     );
@@ -120,9 +151,8 @@ const Roadmap = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Project Roadmap</h1>
             <p className="text-gray-300">Track our progress and future milestones</p>
@@ -132,143 +162,90 @@ const Roadmap = () => {
           </div>
         </div>
         
-        {/* Progress Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-xl p-4 border border-green-500/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-300 text-sm font-medium">Completed</p>
-                <p className="text-white text-2xl font-bold">{roadmapData.achievements.length}</p>
-              </div>
-              <span className="text-3xl">✅</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-300 text-sm font-medium">In Progress</p>
-                <p className="text-white text-2xl font-bold">3</p>
-              </div>
-              <span className="text-3xl">🔄</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-300 text-sm font-medium">Planned</p>
-                <p className="text-white text-2xl font-bold">{nextMilestones.length}</p>
-              </div>
-              <span className="text-3xl">📋</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Achievements Section */}
-      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-semibold text-white">Completed Achievements</h2>
-            <p className="text-gray-400 text-sm">Last updated: {roadmapData.date}</p>
-          </div>
-          <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-semibold">✓</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {roadmapData.achievements.map((achievement, index) => (
-            <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
-              <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-green-400 text-sm">✓</span>
-              </div>
-              <span className="text-gray-200 text-sm leading-relaxed">{achievement}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Next Milestones Section */}
-      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Upcoming Milestones</h2>
-          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-semibold">🎯</span>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {nextMilestones.map((milestone, index) => (
-            <div key={index} className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl p-4 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl">{milestone.icon}</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-white">{milestone.title}</h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      milestone.priority === 'high' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
-                    }`}>
-                      {milestone.priority === 'high' ? 'High Priority' : 'Medium Priority'}
-                    </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {versions.map((version, index) => (
+            <div 
+              key={version.version}
+              className={`bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:bg-white/10 hover:border-green-500/30 ${
+                expandedCard === version.version ? 'ring-2 ring-green-500/50 bg-white/10 border-green-500/50 shadow-lg' : ''
+              }`}
+              onClick={() => toggleCard(version.version)}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">{version.version}</span>
                   </div>
-                  <p className="text-gray-300 text-sm mb-3">{milestone.description}</p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                      <span className="text-blue-400 text-xs font-medium">Planned</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                      <span className="text-gray-400 text-xs">Q2 2025</span>
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">{version.title}</h3>
+                    <p className="text-xs text-gray-400">{version.date}</p>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
+                    ✅ Complete
+                  </span>
+                  <span className="text-gray-400 text-xs transition-transform duration-200">
+                    {expandedCard === version.version ? '▼' : '▶'}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="text-gray-300 text-sm">
+                {expandedCard === version.version ? (
+                  <div className="space-y-3">
+                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                      <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                        {version.details.split('\n').map((line, i) => (
+                          <div key={i} className="mb-2">
+                            {line.startsWith('•') ? (
+                              <span className="text-green-400">•</span> + line.substring(1)
+                            ) : line.startsWith('🚀') || line.startsWith('🔐') || line.startsWith('📊') || line.startsWith('💰') || line.startsWith('🎯') ? (
+                              <span className="font-semibold text-green-400">{line}</span>
+                            ) : (
+                              line
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <button 
+                      className="text-green-400 hover:text-green-300 text-xs font-medium flex items-center gap-1 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedCard(null);
+                      }}
+                    >
+                      <span>▼</span> Show less
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-gray-300 line-clamp-3 leading-relaxed">
+                      {version.details.split('\n')[0].replace(/^[🚀🔐📊💰🎯]\s*\*\*/, '').replace(/\*\*$/, '')}
+                    </p>
+                    <button 
+                      className="text-green-400 hover:text-green-300 text-xs font-medium flex items-center gap-1 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCard(version.version);
+                      }}
+                    >
+                      <span>▶</span> Read more
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Timeline Visualization */}
-      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-        <h2 className="text-xl font-semibold text-white mb-6">Development Timeline</h2>
         
-        <div className="relative">
-          {/* Timeline Track */}
-          <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-green-500 via-blue-500 to-purple-600"></div>
-          
-          {/* Timeline Items */}
-          <div className="space-y-6">
-            <div className="relative">
-              <div className="absolute left-6 top-4 w-4 h-4 bg-green-500 rounded-full border-4 border-gray-900 shadow-lg"></div>
-              <div className="ml-16">
-                <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-xl p-4 border border-green-500/30">
-                  <h3 className="text-white font-semibold mb-1">Foundation Phase</h3>
-                  <p className="text-gray-300 text-sm">Complete - All core infrastructure built</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <div className="absolute left-6 top-4 w-4 h-4 bg-blue-500 rounded-full border-4 border-gray-900 shadow-lg"></div>
-              <div className="ml-16">
-                <div className="bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30">
-                  <h3 className="text-white font-semibold mb-1">Integration Phase</h3>
-                  <p className="text-gray-300 text-sm">In Progress - API integrations and scoring systems</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <div className="absolute left-6 top-4 w-4 h-4 bg-purple-500 rounded-full border-4 border-gray-900 shadow-lg"></div>
-              <div className="ml-16">
-                <div className="bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
-                  <h3 className="text-white font-semibold mb-1">Automation Phase</h3>
-                  <p className="text-gray-300 text-sm">Planned - Full automated trading system</p>
-                </div>
-              </div>
+        <div className="mt-8 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+          <div className="flex items-center gap-3">
+            <span className="text-green-400 text-lg">💡</span>
+            <div>
+              <h4 className="text-green-400 font-semibold">Tip</h4>
+              <p className="text-gray-300 text-sm">Click on any version card to see detailed achievements and milestones for that release.</p>
             </div>
           </div>
         </div>

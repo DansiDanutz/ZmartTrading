@@ -43,6 +43,11 @@ export default function Settings() {
   const [logsPerPage] = useState(20);
   const [logsPagination, setLogsPagination] = useState({});
 
+  const [roadmapVersions, setRoadmapVersions] = useState([]);
+  const [restoreMessage, setRestoreMessage] = useState('');
+  const [restoreError, setRestoreError] = useState('');
+  const [restoreLoading, setRestoreLoading] = useState(false);
+
   useEffect(() => {
     fetchUser();
     if (activeTab === 'admins') {
@@ -50,6 +55,8 @@ export default function Settings() {
     } else if (activeTab === 'logs') {
       fetchActivityLogs();
     }
+    // Fetch roadmap versions for restore UI
+    fetchRoadmapVersions();
   }, [activeTab]);
 
   const fetchUser = async () => {
@@ -248,6 +255,35 @@ export default function Settings() {
       fetchAdmins();
     } catch (error) {
       showMessage(error.response?.data?.error || 'Failed to delete admin', true);
+    }
+  };
+
+  // Fetch roadmap versions for restore UI
+  const fetchRoadmapVersions = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/roadmap-versions`, { withCredentials: true });
+      if (response.data.success) {
+        setRoadmapVersions(response.data.versions);
+      }
+    } catch (error) {
+      setRoadmapVersions([]);
+    }
+  };
+
+  // Restore version handler
+  const handleRestoreVersion = async (version) => {
+    if (!window.confirm(`Are you sure you want to restore to ${version}? This will checkout the codebase to that version.`)) return;
+    setRestoreLoading(true);
+    setRestoreMessage('');
+    setRestoreError('');
+    try {
+      // This should call a backend endpoint to perform the git checkout
+      await axios.post(`${API_BASE_URL}/restore-version`, { version }, { withCredentials: true });
+      setRestoreMessage(`Successfully restored to ${version}. Please restart the app to apply changes.`);
+    } catch (error) {
+      setRestoreError(error.response?.data?.error || `Failed to restore to ${version}`);
+    } finally {
+      setRestoreLoading(false);
     }
   };
 
@@ -806,6 +842,34 @@ export default function Settings() {
               </form>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Only show restore section for super admins */}
+      {user?.is_superadmin && (
+        <div className="mt-10 bg-white/5 rounded-xl p-6 border border-white/10">
+          <h3 className="text-lg font-bold text-green-400 mb-4">Restore Project Version (Super Admin Only)</h3>
+          {roadmapVersions.length === 0 ? (
+            <div className="text-gray-400">No versions found.</div>
+          ) : (
+            <ul className="space-y-3">
+              {roadmapVersions.map((v) => (
+                <li key={v.version} className="flex items-center gap-4">
+                  <span className="font-mono text-sm text-gray-200">{v.version}</span>
+                  <span className="text-gray-400 text-xs">{v.title || v.date}</span>
+                  <button
+                    className="ml-auto px-3 py-1 rounded bg-green-500/80 hover:bg-green-400 text-white text-xs font-semibold shadow"
+                    disabled={restoreLoading}
+                    onClick={() => handleRestoreVersion(v.version)}
+                  >
+                    Restore
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {restoreMessage && <div className="mt-3 text-green-400">{restoreMessage}</div>}
+          {restoreError && <div className="mt-3 text-red-400">{restoreError}</div>}
         </div>
       )}
     </div>

@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const today = new Date().toLocaleDateString();
+
+// Local roadmap data instead of importing from Roadmap component
+const roadmapAchievements = [
+  'Project Foundation - Complete setup with React, Vite, and Tailwind CSS',
+  'Authentication System - Secure login with session management',
+  'API Management - KuCoin integration with live price feeds',
+  'Admin Management - Complete admin user management system',
+  'Version Control - Automated version tracking and roadmap updates'
+];
+
+const roadmapDate = '2025-06-24';
 
 const roadmapData = [
   {
@@ -132,7 +143,7 @@ export default function Documentation() {
                 
                 {/* Timeline Cards */}
                 <div className="space-y-6">
-                  {roadmapData.map((milestone, index) => (
+                  {roadmapAchievements.map((achievement, index) => (
                     <div key={index} className="relative">
                       {/* Timeline Dot */}
                       <div className="absolute left-6 top-6 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-4 border-gray-900 shadow-lg z-10"></div>
@@ -151,21 +162,15 @@ export default function Documentation() {
                           <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center space-x-4">
                               <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                                <span className="text-2xl">{milestone.icon}</span>
+                                <span className="text-2xl">🚀</span>
                               </div>
                               <div>
-                                <h3 className="text-xl font-bold text-white">{milestone.title}</h3>
-                                <p className="text-sm text-gray-400">{milestone.date}</p>
+                                <h3 className="text-xl font-bold text-white">{achievement.split(' - ')[0]}</h3>
+                                <p className="text-sm text-gray-400">{roadmapDate}</p>
                               </div>
                             </div>
                             <div className="flex items-center space-x-3">
-                              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                                milestone.status === 'completed' ? 'bg-green-500/20 text-green-400' : 
-                                milestone.status === 'in-progress' ? 'bg-yellow-500/20 text-yellow-400' : 'bg-gray-500/20 text-gray-400'
-                              }`}>
-                                {milestone.status === 'completed' ? '✅ Completed' : 
-                                 milestone.status === 'in-progress' ? '🔄 In Progress' : '⏳ Planned'}
-                              </span>
+                              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">✅ Completed</span>
                               <button className="text-gray-400 hover:text-blue-400 transition-colors">
                                 {expandedCard === index ? '▼' : '▶'}
                               </button>
@@ -176,23 +181,8 @@ export default function Documentation() {
                           {expandedCard === index && (
                             <div className="mt-6 pt-6 border-t border-white/10">
                               <div className="space-y-3">
-                                {milestone.details.map((detail, detailIndex) => (
-                                  <div key={detailIndex} className="flex items-start space-x-3">
-                                    {detail.startsWith('   •') ? (
-                                      <>
-                                        <span className="text-gray-500 mt-1">└─</span>
-                                        <span className="text-gray-300">{detail.substring(4)}</span>
-                                      </>
-                                    ) : detail === '' ? (
-                                      <div className="h-2"></div>
-                                    ) : (
-                                      <>
-                                        <span className="text-blue-400 mt-1">•</span>
-                                        <span className="text-white font-medium">{detail}</span>
-                                      </>
-                                    )}
-                                  </div>
-                                ))}
+                                <span className="text-blue-400 mt-1">•</span>
+                                <span className="text-white font-medium">{achievement}</span>
                               </div>
                             </div>
                           )}
@@ -214,12 +204,12 @@ export default function Documentation() {
               {/* Summary Stats */}
               <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/10">
-                  <div className="text-3xl font-bold text-white mb-2">{roadmapData.length}</div>
+                  <div className="text-3xl font-bold text-white mb-2">{roadmapAchievements.length}</div>
                   <div className="text-gray-300">Milestones Completed</div>
                 </div>
                 <div className="bg-gradient-to-r from-green-500/20 to-green-600/20 backdrop-blur-xl rounded-2xl p-6 text-center border border-white/10">
                   <div className="text-3xl font-bold text-green-400 mb-2">
-                    {roadmapData.filter(m => m.status === 'completed').length}
+                    {roadmapAchievements.length}
                   </div>
                   <div className="text-gray-300">Successfully Delivered</div>
                 </div>

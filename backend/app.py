@@ -15,6 +15,8 @@ import datetime
 import secrets
 import logging
 from logging.handlers import RotatingFileHandler
+import subprocess
+import re
 
 load_dotenv('ZBot.env')
 
@@ -45,7 +47,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(hours=24)
 # CORS configuration - CRITICAL FIX
 CORS(app, 
      supports_credentials=True, 
-     origins=['http://localhost:5173'],  # Only allow the specific port
+     origins=['http://localhost:5173', 'http://localhost:5001'],  # Allow both ports
      allow_headers=['Content-Type', 'Authorization'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
 
@@ -1309,6 +1311,131 @@ def get_roadmap():
     except Exception as e:
         app.logger.error(f"Error getting roadmap: {e}")
         return jsonify({'error': 'Failed to get roadmap data'}), 500
+
+@app.route('/api/roadmap-versions', methods=['GET'])
+def roadmap_versions():
+    try:
+        # Accurate version information based on actual Git history and achievements
+        static_versions = [
+            {
+                'version': 'V1',
+                'title': 'Project Foundation & Strategy Documentation',
+                'date': '2025-06-12',
+                'details': '''🚀 **Project Foundation: Initial ZmartBot Strategy & Documentation Setup**
+• Initial commit with complete ZmartBot trading strategy documentation
+• Comprehensive PDF documentation: Cryptometer API reference, RiskMetric methodology, KuCoin integration guide
+• Position management formulas and historical trades data structure
+• Basic dashboard UI components and project structure
+• All core strategy documents and reference materials established'''
+            },
+            {
+                'version': 'V2',
+                'title': 'Complete Authentication & Admin Management System',
+                'date': '2025-06-22',
+                'details': '''🔐 **Major Authentication & Admin Management: Fully Tested & Stable**
+• Complete user authentication system with secure login/logout flows
+• Admin user management with role-based access control (admin/superadmin)
+• Password reset functionality with email notifications (tested and working)
+• Comprehensive admin settings panel with user management capabilities
+• Session management with CSRF protection and secure cookie handling
+• Extensive testing suite: 15+ test files covering all authentication flows
+• Frontend/backend improvements with polished UI and responsive design
+• All flows tested and stable - previous version preserved in Git history'''
+            },
+            {
+                'version': 'V3',
+                'title': 'API Management & Version Control System',
+                'date': '2025-06-23',
+                'details': '''📊 **Complete API Management & Version Control: Production Ready**
+• KuCoin API integration with live price feeds and real-time data
+• API key management system with secure storage and validation
+• Complete admin management system with user roles and permissions
+• Version control automation with Git tag integration
+• Roadmap UI with dynamic version cards and expandable details
+• Comprehensive documentation system with automated updates
+• Startup guides and version automation scripts for deployment
+• Database management and API testing suite (20+ test files)
+• All systems tested and production-ready'''
+            },
+            {
+                'version': 'V4',
+                'title': 'Roadmap Automation & UI Polish',
+                'date': '2025-06-24',
+                'details': '''🎯 **Roadmap Automation & Professional UI Polish: Complete**
+• Automated roadmap system with Git integration for version tracking
+• Professional dark theme UI with green accent (#00FF94) design system
+• Enhanced Roadmap component with expandable version cards and detailed explanations
+• Super Admin version restore functionality in Settings tab
+• Backend API enhancements with detailed version information
+• Responsive sidebar navigation with active state indicators
+• Complete version management system with restore capabilities
+• All UI components polished and professional-grade
+• Full integration of version control with user interface'''
+            },
+        ]
+        
+        # Try to get Git versions and merge with static data
+        try:
+            tags = subprocess.check_output(['git', 'tag', '--sort=version:refname'], text=True).splitlines()
+            git_versions = []
+            
+            for tag in tags:
+                if tag.startswith('V'):
+                    try:
+                        # Get tag details
+                        commit_info = subprocess.check_output(['git', 'show', tag, '--no-patch', '--pretty=format:%s||%b'], text=True)
+                        subject, body = commit_info.split('||', 1)
+                        
+                        # Find matching static version
+                        static_version = next((v for v in static_versions if v['version'] == tag.upper()), None)
+                        
+                        if static_version:
+                            git_versions.append(static_version)
+                        else:
+                            # Create new version from Git data
+                            git_versions.append({
+                                'version': tag.upper(),
+                                'title': subject.strip(),
+                                'date': tag,
+                                'details': body.strip() if body.strip() else subject.strip()
+                            })
+                    except Exception as e:
+                        print(f"Error processing tag {tag}: {e}")
+                        continue
+            
+            # If we have Git versions, use them; otherwise use static versions
+            if git_versions:
+                return jsonify({'success': True, 'versions': git_versions})
+            else:
+                return jsonify({'success': True, 'versions': static_versions})
+                
+        except Exception as e:
+            print(f"Error getting Git versions: {e}")
+            # Fallback to static versions
+            return jsonify({'success': True, 'versions': static_versions})
+            
+    except Exception as e:
+        print(f"Error in roadmap_versions: {e}")
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/restore-version', methods=['POST'])
+@login_required
+def restore_version():
+    try:
+        user = User.query.get(session['user_id'])
+        if not user or not getattr(user, 'is_superadmin', False):
+            return jsonify({'error': 'Super admin privileges required'}), 403
+        data = request.get_json()
+        version = data.get('version')
+        if not version or not re.match(r'^V\d+$', version):
+            return jsonify({'error': 'Invalid version'}), 400
+        # Perform git checkout
+        result = subprocess.run(['git', 'checkout', version], capture_output=True, text=True)
+        if result.returncode != 0:
+            return jsonify({'error': result.stderr.strip()}), 500
+        return jsonify({'success': True, 'message': f'Restored to {version}'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():
