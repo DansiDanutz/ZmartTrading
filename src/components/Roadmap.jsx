@@ -3,7 +3,10 @@ import React, { useState, useEffect } from 'react';
 const Roadmap = () => {
   const [roadmapData, setRoadmapData] = useState({
     date: '2025-06-24',
-    achievements: [            "✅ Version V4 - Version V4 -  & Frontend improvements & Backend enhancements & Configuration changes"]
+    achievements: [
+      "✅ Version V4 - Version V4 -  & Frontend improvements & Backend enhancements & Configuration changes",
+      "✅ Version V3 - Complete Authentication & Admin Management System"
+    ]
   });
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +24,10 @@ const Roadmap = () => {
         // Fallback to static data
         setRoadmapData({
           date: '2025-06-24',
-          achievements: [            "✅ Version V4 - Version V4 -  & Frontend improvements & Backend enhancements & Configuration changes"]
+          achievements: [
+            "✅ Version V4 - Version V4 -  & Frontend improvements & Backend enhancements & Configuration changes",
+            "✅ Version V3 - Complete Authentication & Admin Management System"
+          ]
         });
       })
       .finally(() => {
