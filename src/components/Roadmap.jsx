@@ -5,7 +5,9 @@ const Roadmap = () => {
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [expandedCard, setExpandedCard] = useState(null);
+  const [selected, setSelected] = useState(null);
+  const [expanded, setExpanded] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(true); // Default sound is ON
 
   // Accurate static versions based on actual Git history and achievements
   const staticVersions = [
@@ -101,8 +103,151 @@ const Roadmap = () => {
     fetchVersions();
   }, []);
 
-  const toggleCard = (version) => {
-    setExpandedCard(expandedCard === version ? null : version);
+  // Helper to enforce max 8-word title
+  function shortTitle(title) {
+    return title.split(' ').slice(0, 8).join(' ') + (title.split(' ').length > 8 ? '…' : '');
+  }
+
+  // Helper to parse details into lines, remove markdown, and clean up
+  function parseDetails(details) {
+    if (!details) return [];
+    let lines = details
+      .replace(/\*\*/g, '')
+      .replace(/^\s*[-•]+\s*/gm, '')
+      .split(/\n|\r|•/)
+      .map(l => l.trim())
+      .filter(l => l && l.length > 0);
+    if (lines[0] && lines[0].match(/^[\w\s\d:]+[:：]?$/)) lines = lines.slice(1);
+    return lines;
+  }
+
+  // Steam Blast sound effect for wagon clicks
+  const playSteamBlastSound = () => {
+    try {
+      // Create audio element with the Steam Blast sound file
+      const audio = new Audio('/Tone Glow Libraries - Steam Train - Steam Blast.wav');
+      
+      // Set volume and play
+      audio.volume = 0.6; // Adjust volume to 60% for steam blast
+      audio.play().then(() => {
+        console.log('💨 Steam blast sound played!');
+      }).catch(err => {
+        console.log('Steam blast audio play failed:', err);
+        // Fallback to simple beep if file fails
+        playSteamBlastFallback();
+      });
+    } catch (err) {
+      console.log('Steam blast audio creation failed:', err);
+      // Fallback to simple beep
+      playSteamBlastFallback();
+    }
+  };
+
+  // Fallback sound for steam blast
+  const playSteamBlastFallback = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Steam blast-like sound (lower frequency, shorter duration)
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.2);
+      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.4);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.2, audioContext.currentTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 0.6);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.8);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.8);
+      
+      console.log('💨 Fallback steam blast sound played!');
+    } catch (fallbackErr) {
+      console.log('Steam blast fallback audio also failed:', fallbackErr);
+    }
+  };
+
+  // Handler for expanding/collapsing details
+  function handleExpand(idx) {
+    // Play steam blast sound when wagon is clicked (if sound is enabled)
+    if (soundEnabled) {
+      playSteamBlastSound();
+    }
+    setExpanded(expanded === idx ? null : idx);
+  }
+
+  // Locomotive sound effect using the actual train whistle audio file
+  const playLocomotiveSound = () => {
+    try {
+      // Create audio element with the actual train whistle file
+      const audio = new Audio('/InspectorJ - On The Way - Steam Train Whistle Blowing.wav');
+      
+      // Set volume and play
+      audio.volume = 0.7; // Adjust volume to 70%
+      audio.play().then(() => {
+        console.log('🚂 Real train whistle sound played!');
+      }).catch(err => {
+        console.log('Audio play failed:', err);
+        // Fallback to Web Audio API if file fails
+        playFallbackSound();
+      });
+    } catch (err) {
+      console.log('Audio creation failed:', err);
+      // Fallback to Web Audio API
+      playFallbackSound();
+    }
+  };
+
+  // Fallback sound using Web Audio API
+  const playFallbackSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.3);
+      oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.6);
+      oscillator.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.9);
+      oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 1.2);
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.1, audioContext.currentTime + 1.5);
+      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 2.0);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 2.0);
+      
+      console.log('🚂 Fallback train whistle sound played!');
+    } catch (fallbackErr) {
+      console.log('Fallback audio also failed:', fallbackErr);
+    }
+  };
+
+  // Handler for locomotive click
+  const handleLocomotiveClick = () => {
+    if (soundEnabled) {
+      playLocomotiveSound();
+    }
+    // Collapse all expanded details
+    setExpanded(null);
+  };
+
+  // Handler for sound toggle
+  const handleSoundToggle = (e) => {
+    e.stopPropagation(); // Prevent triggering locomotive click
+    setSoundEnabled(!soundEnabled);
   };
 
   if (loading) {
@@ -151,8 +296,9 @@ const Roadmap = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2">Project Roadmap</h1>
             <p className="text-gray-300">Track our progress and future milestones</p>
@@ -161,95 +307,103 @@ const Roadmap = () => {
             <span className="text-white font-semibold text-lg">🚀</span>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {versions.map((version, index) => (
-            <div 
-              key={version.version}
-              className={`bg-white/5 border border-white/10 rounded-2xl p-6 cursor-pointer transition-all duration-300 hover:bg-white/10 hover:border-green-500/30 ${
-                expandedCard === version.version ? 'ring-2 ring-green-500/50 bg-white/10 border-green-500/50 shadow-lg' : ''
-              }`}
-              onClick={() => toggleCard(version.version)}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
-                    <span className="text-white font-semibold text-sm">{version.version}</span>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{version.title}</h3>
-                    <p className="text-xs text-gray-400">{version.date}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-400">
-                    ✅ Complete
-                  </span>
-                  <span className="text-gray-400 text-xs transition-transform duration-200">
-                    {expandedCard === version.version ? '▼' : '▶'}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="text-gray-300 text-sm">
-                {expandedCard === version.version ? (
-                  <div className="space-y-3">
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
-                      <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                        {version.details.split('\n').map((line, i) => (
-                          <div key={i} className="mb-2">
-                            {line.startsWith('•') ? (
-                              <span className="text-green-400">•</span> + line.substring(1)
-                            ) : line.startsWith('🚀') || line.startsWith('🔐') || line.startsWith('📊') || line.startsWith('💰') || line.startsWith('🎯') ? (
-                              <span className="font-semibold text-green-400">{line}</span>
-                            ) : (
-                              line
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <button 
-                      className="text-green-400 hover:text-green-300 text-xs font-medium flex items-center gap-1 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpandedCard(null);
-                      }}
-                    >
-                      <span>▼</span> Show less
-                    </button>
-                  </div>
+      </div>
+
+      {/* Train with Locomotive */}
+      <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10">
+        <div className="flex items-center space-x-0 relative mb-8">
+          {/* Train line with gradient */}
+          <div className="absolute left-0 right-0 top-1/2 h-2 bg-gradient-to-r from-gray-400 via-gray-300 to-gray-400 z-0 rounded-full shadow-lg" style={{transform: 'translateY(-50%)'}} />
+          
+          {/* Locomotive with enhanced styling and click handler */}
+          <div className="relative z-10 flex flex-col items-center group cursor-pointer" onClick={handleLocomotiveClick}>
+            <div className="w-40 h-32 bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-2xl flex items-center justify-center text-white font-bold text-6xl border-4 border-red-800 transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-red-500/50 relative">
+              🚂
+              {/* Sound toggle icon */}
+              <button 
+                onClick={handleSoundToggle}
+                className="absolute top-2 right-2 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-200 backdrop-blur-sm"
+                title={soundEnabled ? "Sound ON - Click to turn OFF" : "Sound OFF - Click to turn ON"}
+              >
+                {soundEnabled ? (
+                  <span className="text-white text-sm">🔊</span>
                 ) : (
-                  <div className="space-y-2">
-                    <p className="text-gray-300 line-clamp-3 leading-relaxed">
-                      {version.details.split('\n')[0].replace(/^[🚀🔐📊💰🎯]\s*\*\*/, '').replace(/\*\*$/, '')}
-                    </p>
-                    <button 
-                      className="text-green-400 hover:text-green-300 text-xs font-medium flex items-center gap-1 transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleCard(version.version);
-                      }}
-                    >
-                      <span>▶</span> Read more
-                    </button>
-                  </div>
+                  <span className="text-white text-sm">🔇</span>
                 )}
+              </button>
+            </div>
+            <div className="flex space-x-2 mt-2">
+              <div className="w-4 h-4 bg-gray-700 rounded-full shadow-inner" />
+              <div className="w-4 h-4 bg-gray-700 rounded-full shadow-inner" />
+              <div className="w-4 h-4 bg-gray-700 rounded-full shadow-inner" />
+            </div>
+            <div className="absolute right-[-12px] top-1/2 w-6 h-2 bg-gradient-to-r from-gray-500 to-gray-400 z-20 rounded-r-full" style={{transform: 'translateY(-50%)'}} />
+          </div>
+
+          {/* Wagons with enhanced hover effects */}
+          {versions.map((v, idx) => (
+            <div key={v.version} className="relative z-10 flex flex-col items-center cursor-pointer group" onClick={() => handleExpand(idx)}>
+              <div className={`w-24 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-2xl flex items-center justify-center text-white font-bold text-xl border-4 border-blue-700 transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-blue-500/50 ${expanded === idx ? 'ring-4 ring-blue-300 ring-opacity-50 scale-110' : ''}`}>
+                {v.version}
               </div>
+              <div className="flex space-x-2 mt-2">
+                <div className="w-4 h-4 bg-gray-700 rounded-full shadow-inner" />
+                <div className="w-4 h-4 bg-gray-700 rounded-full shadow-inner" />
+              </div>
+              {idx < versions.length - 1 && (
+                <div className="absolute right-[-12px] top-1/2 w-6 h-2 bg-gradient-to-r from-gray-500 to-gray-400 z-20 rounded-r-full" style={{transform: 'translateY(-50%)'}} />
+              )}
             </div>
           ))}
         </div>
-        
-        <div className="mt-8 p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
-          <div className="flex items-center gap-3">
-            <span className="text-green-400 text-lg">💡</span>
-            <div>
-              <h4 className="text-green-400 font-semibold">Tip</h4>
-              <p className="text-gray-300 text-sm">Click on any version card to see detailed achievements and milestones for that release.</p>
-            </div>
-          </div>
-        </div>
       </div>
+
+      {/* Version Cards with enhanced styling */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {versions.map((v, idx) => (
+          <div 
+            key={v.version} 
+            className={`bg-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer transform hover:scale-105 hover:shadow-xl hover:shadow-blue-500/20 ${expanded === idx ? 'ring-4 ring-blue-300 ring-opacity-50 scale-105' : ''}`} 
+            onClick={() => handleExpand(idx)}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                {v.version}
+              </div>
+              <div className="flex-1">
+                <h4 className="text-white font-bold text-base leading-tight">{shortTitle(v.title)}</h4>
+                <p className="text-gray-400 text-xs mt-1">{v.date}</p>
+              </div>
+            </div>
+            
+            {expanded === idx ? (
+              <div className="mt-4 space-y-2 animate-fadeIn">
+                {parseDetails(v.details).map((line, i) => (
+                  <div key={i} className="text-gray-300 text-sm leading-relaxed flex items-start gap-2">
+                    <span className="text-green-400 mt-0.5">•</span>
+                    <span className="flex-1">{line}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <button className="mt-4 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white text-sm font-semibold shadow-lg transform transition-all duration-200 hover:scale-105">
+                View Details
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Add some custom CSS for animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 };

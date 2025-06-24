@@ -1315,104 +1315,148 @@ def get_roadmap():
 @app.route('/api/roadmap-versions', methods=['GET'])
 def roadmap_versions():
     try:
-        # Accurate version information based on actual Git history and achievements
+        # Get all Git versions dynamically
+        try:
+            # Get all tags sorted by version
+            result = subprocess.run(['git', 'tag', '--list', 'V*', '--sort=version:refname'], 
+                                  capture_output=True, text=True, cwd='..')
+            if result.returncode != 0:
+                raise Exception("Failed to get Git tags")
+            
+            versions = []
+            for tag in result.stdout.strip().split('\n'):
+                if not tag:
+                    continue
+                    
+                # Get tag details
+                tag_result = subprocess.run(['git', 'show', tag, '--no-patch', '--format=fuller'], 
+                                          capture_output=True, text=True, cwd='..')
+                if tag_result.returncode == 0:
+                    # Parse tag information
+                    lines = tag_result.stdout.split('\n')
+                    date_line = None
+                    message_lines = []
+                    in_message = False
+                    
+                    for line in lines:
+                        if line.startswith('Date:'):
+                            date_line = line
+                        elif line.startswith('    '):
+                            in_message = True
+                            message_lines.append(line.strip())
+                        elif in_message and line.strip():
+                            message_lines.append(line.strip())
+                    
+                    # Extract date
+                    date = datetime.now().strftime('%Y-%m-%d')
+                    if date_line:
+                        try:
+                            date_str = date_line.replace('Date:', '').strip()
+                            date_obj = datetime.strptime(date_str, '%a %b %d %H:%M:%S %Y %z')
+                            date = date_obj.strftime('%Y-%m-%d')
+                        except:
+                            pass
+                    
+                    # Extract title and details
+                    title = tag
+                    details = '\n'.join(message_lines) if message_lines else f'Version {tag}'
+                    
+                    # Try to extract a better title from the first line of details
+                    if details:
+                        first_line = details.split('\n')[0]
+                        if ':' in first_line:
+                            title = first_line.split(':', 1)[1].strip()
+                        elif len(first_line) < 50:  # If it's a reasonable length
+                            title = first_line
+                    
+                    versions.append({
+                        'version': tag,
+                        'title': title,
+                        'date': date,
+                        'details': details
+                    })
+            
+            # If we have Git versions, use them
+            if versions:
+                return jsonify({'success': True, 'versions': versions})
+                
+        except Exception as e:
+            print(f"Error getting Git versions: {e}")
+        
+        # Fallback to static versions if Git fails
         static_versions = [
             {
                 'version': 'V1',
                 'title': 'Project Foundation & Strategy Documentation',
                 'date': '2025-06-12',
-                'details': '''🚀 **Project Foundation: Initial ZmartBot Strategy & Documentation Setup**
-• Initial commit with complete ZmartBot trading strategy documentation
-• Comprehensive PDF documentation: Cryptometer API reference, RiskMetric methodology, KuCoin integration guide
-• Position management formulas and historical trades data structure
-• Basic dashboard UI components and project structure
-• All core strategy documents and reference materials established'''
+                'details': '''🎯 **Project Foundation & Strategy Documentation**
+🚀 Initial ZmartBot trading strategy documentation
+📚 Comprehensive PDF documentation with API references
+📊 RiskMetric methodology and KuCoin integration guide
+🔧 Position management formulas and historical trades
+🎨 Basic dashboard UI components and project structure
+📋 All core strategy documents and reference materials'''
             },
             {
                 'version': 'V2',
-                'title': 'Complete Authentication & Admin Management System',
+                'title': 'Complete Authentication & Admin Management',
                 'date': '2025-06-22',
-                'details': '''🔐 **Major Authentication & Admin Management: Fully Tested & Stable**
-• Complete user authentication system with secure login/logout flows
-• Admin user management with role-based access control (admin/superadmin)
-• Password reset functionality with email notifications (tested and working)
-• Comprehensive admin settings panel with user management capabilities
-• Session management with CSRF protection and secure cookie handling
-• Extensive testing suite: 15+ test files covering all authentication flows
-• Frontend/backend improvements with polished UI and responsive design
-• All flows tested and stable - previous version preserved in Git history'''
+                'details': '''🎯 **Complete Authentication & Admin Management**
+🔐 Complete user authentication system with secure flows
+👥 Admin user management with role-based access control
+🔑 Password reset functionality with email notifications
+⚙️ Comprehensive admin settings panel with user management
+🛡️ Session management with CSRF protection and secure cookies
+🧪 Extensive testing suite with 15+ test files
+🎨 Frontend/backend improvements with polished UI design
+✅ All flows tested and stable with Git history'''
             },
             {
                 'version': 'V3',
                 'title': 'API Management & Version Control System',
                 'date': '2025-06-23',
-                'details': '''📊 **Complete API Management & Version Control: Production Ready**
-• KuCoin API integration with live price feeds and real-time data
-• API key management system with secure storage and validation
-• Complete admin management system with user roles and permissions
-• Version control automation with Git tag integration
-• Roadmap UI with dynamic version cards and expandable details
-• Comprehensive documentation system with automated updates
-• Startup guides and version automation scripts for deployment
-• Database management and API testing suite (20+ test files)
-• All systems tested and production-ready'''
+                'details': '''🎯 **API Management & Version Control System**
+🔌 KuCoin API integration with live price feeds
+🔑 API key management system with secure storage
+👥 Complete admin management system with user roles
+🏷️ Version control automation with Git tag integration
+🎯 Roadmap UI with dynamic version cards
+📚 Comprehensive documentation system with automated updates
+🚀 Startup guides and version automation scripts
+🧪 Database management and API testing suite
+✅ All systems tested and production-ready'''
             },
             {
                 'version': 'V4',
                 'title': 'Roadmap Automation & UI Polish',
                 'date': '2025-06-24',
-                'details': '''🎯 **Roadmap Automation & Professional UI Polish: Complete**
-• Automated roadmap system with Git integration for version tracking
-• Professional dark theme UI with green accent (#00FF94) design system
-• Enhanced Roadmap component with expandable version cards and detailed explanations
-• Super Admin version restore functionality in Settings tab
-• Backend API enhancements with detailed version information
-• Responsive sidebar navigation with active state indicators
-• Complete version management system with restore capabilities
-• All UI components polished and professional-grade
-• Full integration of version control with user interface'''
+                'details': '''🎯 **Roadmap Automation & UI Polish**
+🤖 Automated roadmap system with Git integration
+🎨 Professional dark theme UI with green accent design
+📋 Enhanced Roadmap component with expandable version cards
+⚙️ Super Admin version restore functionality in Settings
+🔧 Backend API enhancements with detailed version information
+🎯 Responsive sidebar navigation with active state indicators
+🔄 Complete version management system with restore capabilities
+✨ All UI components polished and professional-grade'''
+            },
+            {
+                'version': 'V5',
+                'title': 'Complete Automation & Visual Polish',
+                'date': '2025-06-24',
+                'details': '''🎯 **Complete Automation & Visual Polish**
+🤖 Full Git automation system with post-commit hooks
+🚂 Enhanced train visualization with hover effects and animations
+⚙️ Complete version restore system in Settings panel
+🎨 Professional UI polish with gradients and visual effects
+🔧 Automated version details generation from logs and commits
+📊 Intelligent analysis of work done between versions
+🛡️ Enhanced security with comprehensive restore functionality
+✨ All systems fully automated and production-ready'''
             },
         ]
         
-        # Try to get Git versions and merge with static data
-        try:
-            tags = subprocess.check_output(['git', 'tag', '--sort=version:refname'], text=True).splitlines()
-            git_versions = []
-            
-            for tag in tags:
-                if tag.startswith('V'):
-                    try:
-                        # Get tag details
-                        commit_info = subprocess.check_output(['git', 'show', tag, '--no-patch', '--pretty=format:%s||%b'], text=True)
-                        subject, body = commit_info.split('||', 1)
-                        
-                        # Find matching static version
-                        static_version = next((v for v in static_versions if v['version'] == tag.upper()), None)
-                        
-                        if static_version:
-                            git_versions.append(static_version)
-                        else:
-                            # Create new version from Git data
-                            git_versions.append({
-                                'version': tag.upper(),
-                                'title': subject.strip(),
-                                'date': tag,
-                                'details': body.strip() if body.strip() else subject.strip()
-                            })
-                    except Exception as e:
-                        print(f"Error processing tag {tag}: {e}")
-                        continue
-            
-            # If we have Git versions, use them; otherwise use static versions
-            if git_versions:
-                return jsonify({'success': True, 'versions': git_versions})
-            else:
-                return jsonify({'success': True, 'versions': static_versions})
-                
-        except Exception as e:
-            print(f"Error getting Git versions: {e}")
-            # Fallback to static versions
-            return jsonify({'success': True, 'versions': static_versions})
+        return jsonify({'success': True, 'versions': static_versions})
             
     except Exception as e:
         print(f"Error in roadmap_versions: {e}")
