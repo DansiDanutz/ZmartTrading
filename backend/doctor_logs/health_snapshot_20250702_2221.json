@@ -1,0 +1,91 @@
+{
+  "timestamp": "2025-07-02T22:21:20.577917",
+  "overall_status": "CRITICAL",
+  "vitals": {
+    "timestamp": "2025-07-02T22:21:00.095399",
+    "cpu_percent": 0.4,
+    "memory_percent": 5.5,
+    "disk_percent": 2.7,
+    "load_average": 0.07763671875,
+    "uptime_hours": 0.07039939138888889
+  },
+  "backend": {
+    "status": "DOWN"
+  },
+  "frontend": {
+    "status": "DOWN"
+  },
+  "database": {
+    "status": "CRITICAL",
+    "databases": {
+      "main_db": {
+        "status": "MISSING",
+        "path": "backend/instance/zmarttrading.db"
+      },
+      "riskmetric_db": {
+        "status": "MISSING",
+        "path": "riskmetric_history.db"
+      },
+      "timespend_db": {
+        "status": "MISSING",
+        "path": "real_timespend.db"
+      },
+      "lifetime_db": {
+        "status": "MISSING",
+        "path": "lifetime_age.db"
+      }
+    },
+    "healthy_count": 0,
+    "total_count": 4
+  },
+  "apis": {
+    "status": "DEGRADED",
+    "apis": {
+      "cryptometer": {
+        "status": "DEGRADED",
+        "response_time": 0.262255,
+        "status_code": 400
+      },
+      "kucoin": {
+        "status": "HEALTHY",
+        "response_time": 0.200023,
+        "status_code": 200
+      }
+    },
+    "healthy_count": 1,
+    "total_count": 2
+  },
+  "security": {
+    "status": "HEALTHY",
+    "checks": {
+      "api_keys": {
+        "status": "HEALTHY",
+        "issues": []
+      },
+      "file_permissions": {
+        "status": "HEALTHY",
+        "issues": []
+      },
+      "open_ports": {
+        "status": "HEALTHY",
+        "listening_ports": [
+          26053,
+          26054,
+          40475,
+          39627
+        ],
+        "unexpected_ports": [
+          26053,
+          26054,
+          40475,
+          39627
+        ]
+      },
+      "ssl_certs": {
+        "status": "HEALTHY",
+        "note": "Local development environment"
+      }
+    },
+    "critical_issues": 0
+  }
+}

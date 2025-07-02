@@ -1,0 +1,31 @@
+[Unit]
+Description=ZMart Trading Bot 24/7 Doctor Agent
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/workspace/zmarttrading
+Environment=PYTHONPATH=/workspace/zmarttrading
+ExecStart=/usr/bin/python3 /workspace/zmarttrading/doctor_agent_24_7.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/workspace/zmarttrading
+
+[Install]
+WantedBy=multi-user.target

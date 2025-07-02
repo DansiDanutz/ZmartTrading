@@ -1,0 +1,70 @@
+{
+  "demo_date": "2025-07-02T22:33:37.633156",
+  "demo_scenarios": 4,
+  "learning_report": {
+    "agent_id": "demo_doctor",
+    "timestamp": "2025-07-02T22:33:37.630642",
+    "learning_stats": {
+      "total_problems": 4,
+      "critical_problems": 3,
+      "average_occurrences": 1.25
+    },
+    "top_problems": [
+      {
+        "type": "BACKEND_DOWN",
+        "description": "Backend service not responding on port 5000",
+        "occurrences": 2,
+        "severity": "CRITICAL"
+      },
+      {
+        "type": "HIGH_MEMORY",
+        "description": "Memory usage at 92.5%",
+        "occurrences": 1,
+        "severity": "WARNING"
+      },
+      {
+        "type": "DATABASE_CRITICAL",
+        "description": "SQLite database locked or corrupted",
+        "occurrences": 1,
+        "severity": "CRITICAL"
+      },
+      {
+        "type": "API_CRITICAL",
+        "description": "Cryptometer API rate limit exceeded",
+        "occurrences": 1,
+        "severity": "CRITICAL"
+      }
+    ],
+    "best_solutions": [
+      {
+        "description": "Clean up old logs and temporary files to free memory",
+        "confidence": 1.0,
+        "success_count": 1,
+        "problem_type": "HIGH_MEMORY",
+        "created_by": "demo_doctor"
+      },
+      {
+        "description": "Backup database and restart backend to unlock connections",
+        "confidence": 1.0,
+        "success_count": 1,
+        "problem_type": "DATABASE_CRITICAL",
+        "created_by": "demo_doctor"
+      },
+      {
+        "description": "Wait for rate limit reset and verify API connectivity",
+        "confidence": 1.0,
+        "success_count": 1,
+        "problem_type": "API_CRITICAL",
+        "created_by": "demo_doctor"
+      }
+    ],
+    "collaboration_stats": {
+      "solutions_shared": 0,
+      "solutions_received": 0
+    },
+    "recommendations": [
+      "\ud83e\udd1d No recent solution sharing detected - consider increasing collaboration with other agents"
+    ]
+  },
+  "demo_status": "completed"
+}

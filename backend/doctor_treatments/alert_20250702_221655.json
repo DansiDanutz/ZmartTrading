@@ -1,0 +1,6 @@
+{
+  "timestamp": "2025-07-02T22:16:55.663860",
+  "type": "BACKEND_DOWN",
+  "message": "Backend service is down",
+  "severity": "CRITICAL"
+}

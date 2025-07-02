@@ -1,0 +1,6 @@
+{
+  "timestamp": "2025-07-02T22:42:22.859232",
+  "type": "DATABASE_CRITICAL",
+  "message": "Only 0/4 databases healthy",
+  "severity": "CRITICAL"
+}
