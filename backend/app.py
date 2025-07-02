@@ -1,4 +1,5 @@
 import os
+import json
 from flask import Flask, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail, Message
@@ -1256,6 +1257,148 @@ def get_kucoin_price(symbol):
         import traceback
         print('Exception in get_kucoin_price:', traceback.format_exc())
         return jsonify({'error': str(e)}), 500
+
+# Doctor Agent Health Monitoring API
+@app.route('/api/doctor/health', methods=['GET'])
+def get_doctor_health():
+    """Get current system health status from Doctor Agent"""
+    try:
+        # Try to read the latest health snapshot
+        import glob
+        snapshot_files = glob.glob('doctor_logs/health_snapshot_*.json')
+        
+        if not snapshot_files:
+            return jsonify({
+                'error': 'No health data available',
+                'message': 'Doctor Agent may not be running'
+            }), 503
+        
+        # Get the most recent snapshot
+        latest_snapshot = max(snapshot_files)
+        
+        with open(latest_snapshot, 'r') as f:
+            health_data = json.load(f)
+        
+        return jsonify(health_data)
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get doctor health data: {e}")
+        return jsonify({
+            'error': 'Failed to retrieve health data',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/doctor/status', methods=['GET'])
+def get_doctor_status():
+    """Get Doctor Agent status and uptime"""
+    try:
+        # Check if doctor process is running
+        import subprocess
+        result = subprocess.run(['pgrep', '-f', 'doctor_agent_24_7.py'], 
+                              capture_output=True, text=True)
+        
+        is_running = bool(result.stdout.strip())
+        
+        status_data = {
+            'is_running': is_running,
+            'process_id': result.stdout.strip() if is_running else None,
+            'status': 'ACTIVE' if is_running else 'INACTIVE',
+            'message': 'Doctor Agent is monitoring your system' if is_running else 'Doctor Agent is not running'
+        }
+        
+        return jsonify(status_data)
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get doctor status: {e}")
+        return jsonify({
+            'error': 'Failed to check doctor status',
+            'is_running': False,
+            'status': 'ERROR',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/doctor/alerts', methods=['GET'])
+def get_doctor_alerts():
+    """Get recent doctor alerts"""
+    try:
+        import glob
+        import json
+        from datetime import datetime, timedelta
+        
+        # Get alert files from last 24 hours
+        alert_files = glob.glob('doctor_treatments/alert_*.json')
+        recent_alerts = []
+        
+        cutoff_time = datetime.now() - timedelta(hours=24)
+        
+        for alert_file in alert_files:
+            try:
+                with open(alert_file, 'r') as f:
+                    alert_data = json.load(f)
+                
+                alert_time = datetime.fromisoformat(alert_data.get('timestamp', ''))
+                if alert_time > cutoff_time:
+                    recent_alerts.append(alert_data)
+            except:
+                continue
+        
+        # Sort by timestamp (newest first)
+        recent_alerts.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+        
+        return jsonify({
+            'alerts': recent_alerts[:50],  # Limit to 50 most recent
+            'total_count': len(recent_alerts)
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Failed to get doctor alerts: {e}")
+        return jsonify({
+            'error': 'Failed to retrieve alerts',
+            'alerts': [],
+            'total_count': 0
+        }), 500
+
+@app.route('/api/doctor/restart', methods=['POST'])
+@login_required
+@superadmin_required
+def restart_doctor():
+    """Restart the Doctor Agent (SuperAdmin only)"""
+    try:
+        import subprocess
+        
+        # Stop existing doctor process
+        subprocess.run(['pkill', '-f', 'doctor_agent_24_7.py'], stderr=subprocess.DEVNULL)
+        time.sleep(2)
+        
+        # Start doctor agent
+        subprocess.Popen(['python3', 'doctor_agent_24_7.py'], 
+                        stdout=subprocess.DEVNULL, 
+                        stderr=subprocess.DEVNULL)
+        
+        # Log the restart
+        log_activity('DOCTOR_RESTART', 'Doctor Agent restarted by SuperAdmin', session.get('user_id'))
+        
+        return jsonify({
+            'message': 'Doctor Agent restart initiated',
+            'status': 'success'
+        })
+        
+    except Exception as e:
+        app.logger.error(f"Failed to restart doctor: {e}")
+        log_activity('DOCTOR_RESTART_FAILED', f'Failed to restart Doctor Agent: {e}', session.get('user_id'))
+        return jsonify({
+            'error': 'Failed to restart Doctor Agent',
+            'message': str(e)
+        }), 500
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    """Simple health check endpoint for Doctor Agent monitoring"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.datetime.utcnow().isoformat(),
+        'service': 'ZMart Trading Backend'
+    })
 
 @app.route('/api/roadmap', methods=['GET'])
 def get_roadmap():
